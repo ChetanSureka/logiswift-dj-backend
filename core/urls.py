@@ -8,6 +8,6 @@ urlpatterns = [
     path("api/v1/", include("crm.urls")),
     # path("test/", include("mis.urls")),
     # path("tasks/", include("tasks.urls")),
-    # path("", admin.site.urls, name="admin"),
+    path("admin/", admin.site.urls, name="admin"),
     path("", index),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

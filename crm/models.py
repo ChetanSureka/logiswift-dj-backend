@@ -3,19 +3,19 @@ import uuid
 
 
 ConsignemntStatusChoices = [
-    ["Created","Created"],
-    ["In-transit","In-transit"],
-    ["Reached","Reached"],
-    ["Out For Delivery","Out For Delivery"],
-    ["Delivered","Delivered"],
-    ["Attempted","Attempted"],
-    ["Returned","Returned"],
+    ["created","created"],
+    ["in-transit","in-transit"],
+    ["reached","reached"],
+    ["out for delivery","out for delivery"],
+    ["delivered","delivered"],
+    ["attempted","attempted"],
+    ["returned","returned"],
     ["undelivered","undelivered"]
 ]
 
 ConsignmentModeChoices = [
-    ["Forward","Forward"],
-    ["Reverse","Reverse"]
+    ["forward","forward"],
+    ["reverse","reverse"]
 ]
 
 

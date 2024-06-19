@@ -23,7 +23,7 @@ def getConsignmentByLr(request, lr):
         consignment = Consignment.objects.get(lr=lr)
         if consignment:
             serializer = ConsignmentSerializer(consignment)
-            data = serializer.data
+            data = [serializer.data]
             return HttpResponse.Ok(data=data, message="Consignment fetched successfully")
     except Consignment.DoesNotExist:
         print("[ERROR] Consignment not found.")

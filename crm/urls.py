@@ -15,5 +15,5 @@ urlpatterns = [
 
 
     path("coloaders/", getColoaders),
-    path("distributors/", getDistributors),
+    path("consigners/", getDistributors),
 ]

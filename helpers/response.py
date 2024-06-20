@@ -16,6 +16,7 @@ class HttpResponse():
                 "data": data,
                 "message": message,
                 "status": status,
+                "statusCode": statusCode
             }
         )
 
@@ -30,6 +31,7 @@ class HttpResponse():
             data={
                 "message": message,
                 "status": status,
+                "statusCode": statusCode
             }
         )
 
@@ -44,6 +46,7 @@ class HttpResponse():
             data={
                 "message": message,
                 "status": status,
+                "statusCode": statusCode
             }
         )
     
@@ -58,5 +61,6 @@ class HttpResponse():
             data={
                 "message": message,
                 "status": status,
+                "statusCode": statusCode
             }
         )

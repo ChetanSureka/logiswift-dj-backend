@@ -1,15 +1,22 @@
-from django.db.models import Q
+from django.db.models import Q, F
 from crm.models import Consignment
-from serializers.consignments import ConsignmentSerializer
+from serializers.consignments import ConsignmentSerializer, getConsignmentSerializer
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
 
 @api_view(["GET"])
 def getConsignments(request):
     try:
-        consignments = Consignment.objects.all().order_by('-lrDate')
+        # consignments = Consignment.objects.all().order_by('-lrDate')
+        consignments = Consignment.objects.select_related("consignee_id", "consigner_id", "vendor_id").annotate(
+            consigneeName=F('consignee_id__name'),
+            consignerName=F('consigner_id__name'),
+            vendorName=F('vendor_id__name')
+        ).order_by('-lrDate')
+        
         print("Consignments: %s" % len(consignments))
-        serializer = ConsignmentSerializer(consignments, many=True)
+        
+        serializer = getConsignmentSerializer(consignments, many=True)
         data = serializer.data
         return HttpResponse.Ok(data=data, message="Consignments fetched successfully")
     except Exception as e:
@@ -44,7 +51,11 @@ def getFilteredConsignments(request):
     channel_partner = request.query_params.get('channelPartner')
     
     try:
-        queryset = Consignment.objects.all().order_by('-lrDate')
+        queryset = Consignment.objects.select_related("consignee_id", "consigner_id", "vendor_id").annotate(
+            consigneeName=F('consignee_id__name'),
+            consignerName=F('consigner_id__name'),
+            vendorName=F('vendor_id__name')
+        ).order_by('-lrDate')
 
         if status:
             queryset = queryset.filter(status=status)
@@ -70,7 +81,7 @@ def getFilteredConsignments(request):
                 pass
         
         print("Consignments filtered: ", queryset)
-        serilaizer = ConsignmentSerializer(queryset, many=True)
+        serilaizer = getConsignmentSerializer(queryset, many=True)
         data = serilaizer.data
         return HttpResponse.Ok(data=data, message="Filtered consignments fetched successfully")
     

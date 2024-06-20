@@ -2,6 +2,33 @@ from crm.models import Consignment, ConsigneeConsigner, VendorDetails
 from rest_framework import serializers
 
 
+class getConsignmentSerializer(serializers.ModelSerializer):
+    consigneeName = serializers.CharField()
+    consignerName = serializers.CharField()
+    vendorName = serializers.CharField()
+
+    class Meta:
+        model = Consignment
+        # fields = '__all__'
+        fields = [
+            "id",
+            "lr",
+            "lrDate",
+            "quantity",
+            "weight",
+            "status",
+            "mode",
+            "remarks",
+            "deliveryDate",
+            "consignee_id",
+            "consigneeName",
+            "consigner_id",
+            "consignerName",
+            "vendor_id",
+            "vendorName",
+        ]
+
+
 class ConsignmentSerializer(serializers.ModelSerializer):
     consigneeName = serializers.SerializerMethodField()
     consignerName = serializers.SerializerMethodField()

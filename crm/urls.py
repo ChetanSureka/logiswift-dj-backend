@@ -14,6 +14,6 @@ urlpatterns = [
     path("consignment/<str:lr>/delete/", deleteConsignment),
 
 
-    path("coloaders/", getColoaders),
+    path("vendors/", getColoaders),
     path("distributors/", getDistributors),
 ]

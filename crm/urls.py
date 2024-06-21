@@ -2,7 +2,7 @@ from django.urls import path
 from views.consignments import *
 from views.coloaders import *
 from views.distributors import *
-
+from views.dashboard import getDashboard
 
 
 urlpatterns = [
@@ -18,4 +18,6 @@ urlpatterns = [
 
     path("vendors/", getColoaders),
     path("distributors/", getDistributors),
+    
+    path("dashboard/", getDashboard),
 ]

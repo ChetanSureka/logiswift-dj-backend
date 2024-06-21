@@ -6,7 +6,7 @@ ConsignemntStatusChoices = [
     ["created","created"],
     ["in-transit","in-transit"],
     ["reached","reached"],
-    ["out for delivery","out for delivery"],
+    ["out-for-delivery","out-for-delivery"],
     ["delivered","delivered"],
     ["attempted","attempted"],
     ["returned","returned"],

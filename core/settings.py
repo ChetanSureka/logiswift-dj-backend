@@ -96,13 +96,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-    "https://www.logiswift.in",
-    "https://webapp-1175801.pythonanywhere.com",    
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://localhost:8000",
+#     "https://www.logiswift.in",
+#     "https://webapp-1175801.pythonanywhere.com",    
+# ]
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

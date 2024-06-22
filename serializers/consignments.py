@@ -65,3 +65,33 @@ class ConsignmentSerializer(serializers.ModelSerializer):
     def get_vendorName(self, obj):
         vendor = obj.vendor_id
         return vendor.name if vendor else None
+    
+    
+    # add validations
+    def validate_lr(self, value):
+        try:
+            value = int(value)
+        except Exception as e:
+            return value
+        
+        if value <= 0:
+            raise serializers.ValidationError("LR number can't be negative or zero.")
+        if value > 999999:
+            raise serializers.ValidationError("LR number can't be greater than 6 digits.")
+        return value
+
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Quantity can't be negative or zero.")
+        if value > 9999:
+            raise serializers.ValidationError("Quantity can't exceed 4 digits.")
+        return value
+
+
+    def validate_weight(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Weight can't be negative or zero.")
+        if value > 99999:
+            raise serializers.ValidationError("Weight can't exceed 5 digits.")
+        return value

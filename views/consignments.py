@@ -37,7 +37,7 @@ def getConsignments(request):
         return HttpResponse.Ok(data=response_data, message="Consignments fetched successfully")
     except Exception as e:
         print("Failed to fetch Consignments [ERROR]: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["GET"])
@@ -53,7 +53,7 @@ def getConsignmentByLr(request, lr):
         return HttpResponse.BadRequest(message="Consignment not found")
     except Exception as e:
         print("Failed to get Consignment [ERROR]: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["GET"])
@@ -120,7 +120,7 @@ def getFilteredConsignments(request):
     
     except Exception as e:
         print("[ERROR] Failed to filter consignments: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["DELETE"])
@@ -138,7 +138,7 @@ def deleteConsignment(request, lr):
     
     except Exception as e:
         print("[ERROR] Failed to delete consignment: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["POST"])
@@ -172,7 +172,7 @@ def createConsignment(request):
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:
         print("[ERROR] failed to create consignment: ", e)
-        return HttpResponse.Failed(message="Failed to create consignment")
+        return HttpResponse.Failed(message="Failed to create consignment", error=e)
 
 
 
@@ -218,7 +218,7 @@ def updateConsignment(request, lr):
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:
         print("[ERROR] failed to create consignment: ", e)
-        return HttpResponse.Failed(message="Failed to create consignment")
+        return HttpResponse.Failed(message="Failed to create consignment", error=e)
 
 
 @api_view(["GET"])
@@ -252,6 +252,6 @@ def getStatusCount(request):
     
     except Exception as e:
         print("[ERROR] failed to get status count: ", e)
-        return HttpResponse.Failed({"error": "Failed to get status count"})
+        return HttpResponse.Failed("Failed to get status count", error=e)
 
     

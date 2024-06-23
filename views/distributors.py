@@ -13,5 +13,5 @@ def getDistributors(request):
         return HttpResponse.Ok(data=data, message="Distributors fetched successfully")
     except Exception as e:
         print("[ERROR] Error fetching distributors: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 

@@ -13,5 +13,5 @@ def getColoaders(request):
         return HttpResponse.Ok(data=data, message="Coloaders fetched successfully")
     except Exception as e:
         print("[ERROR] Error fetching coloaders: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 

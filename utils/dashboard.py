@@ -9,14 +9,11 @@ def total_intransit_lrs():
     return consignment_count
 
 
-def pending_lrs():
-    # [TODO]
-    # need pending lrs only
-    # pending lrs are not delivered
-    pending_count = Consignment.objects.filter(status="delivered").count()
-    pending_count -= pending_count
-    print("Pending Lrs: ", pending_count)
-    return pending_count
+# def pending_lrs():
+#     pending_count = Consignment.objects.exclude(status__in=["delivered", "in-transit"]).count()
+#     pending_count -= pending_count
+#     print("Pending Lrs: ", pending_count)
+#     return pending_count
 
 
 def current_month_delivered_lrs():
@@ -49,11 +46,22 @@ def current_month_total_weight():
     return total_weight
 
 
+def lr_ofd():
+    '''
+    Filter consignments for lrs ofd status and return count
+    '''
+    consignment_count = Consignment.objects.filter(status="out-for-delivery").count()
+    print("OFD Count: ", consignment_count)
+    return consignment_count
+
+
+
 def generate_dashboard():
     dashboard_data = {
         "in_transit_i_total": total_intransit_lrs(),
-        "pending": pending_lrs(),
+        # "pending_i_total": pending_lrs(),
         "delivered_i_current_month": current_month_delivered_lrs(),
+        "out_for Delivery_i_total": lr_ofd(),
         "total_weight_i_current_month": current_month_total_weight(),
     }
     

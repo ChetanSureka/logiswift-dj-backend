@@ -1,5 +1,6 @@
 from django.db.models import Q, F
-from crm.models import Consignment, ConsignemntStatusChoices
+from django.utils import timezone
+from crm.models import Consignment
 from serializers.consignments import ConsignmentSerializer, getConsignmentSerializer
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
@@ -208,6 +209,10 @@ def updateConsignment(request, lr):
     try:
         serializer = ConsignmentSerializer(consignment, data=req_data, partial=True)
         if serializer.is_valid():
+            status = serializer.validated_data.get("status", None)
+            deliveryDate = serializer.validated_data.get("deliveryDate", None)
+            if status == "delivered" and deliveryDate is None:
+                serializer.validated_data["deliveryDate"] = timezone.now().date()
             serializer.save()
             return HttpResponse.Ok(data=serializer.data, message="Consignment updated successfully")
         return HttpResponse.BadRequest(message=serializer.errors)

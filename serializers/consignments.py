@@ -95,3 +95,19 @@ class ConsignmentSerializer(serializers.ModelSerializer):
         if value > 99999:
             raise serializers.ValidationError("Weight can't exceed 5 digits.")
         return value
+    
+    
+    def validate(self, data):
+        lrDate = data.get('lrDate')
+        deliveryDate = data.get('deliveryDate')
+        errors = {}
+
+        if lrDate and deliveryDate and deliveryDate < lrDate:
+            # raise serializers.ValidationError("Delivery date cannot be before LR date.")
+            errors["deliveryDate"] = "Delivery date cannot be before LR date"
+        
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
+    

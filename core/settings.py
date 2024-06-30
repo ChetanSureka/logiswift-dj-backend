@@ -171,6 +171,7 @@ if prod:
 else:
     WEBSITE_BASE_URL = 'http://127.0.0.1:8000/'
 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -178,14 +179,14 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler"},
         "file": {
             "class": "logging.FileHandler",
-            "filename": "general.log",
+            "filename": os.path.join(BASE_DIR, "logs/general.log"),
             "formatter": "verbose",
         },
     },
     "loggers": {
         "": {
             "handlers": ["console", "file"],
-            "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+            "level": "INFO",
         }
     },
     "formatters": {

@@ -219,6 +219,17 @@ def updateConsignment(request, lr):
     
     
     try:
+        
+        # fetch consignee tat
+        try:
+            tat = ConsigneeConsigner.objects.get(consigner_id=req_data['consigner_id']).tat
+            if tat is None:
+                tat = 1
+        except Exception as e:
+            print("Error fetching consignee tat: \n", e)
+        
+        req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
+        
         serializer = ConsignmentSerializer(consignment, data=req_data, partial=True)
         if serializer.is_valid():
             status = serializer.validated_data.get("status", None)

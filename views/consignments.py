@@ -1,9 +1,10 @@
 from django.db.models import Q, F
 from django.utils import timezone
-from crm.models import Consignment
+from crm.models import Consignment, ConsigneeConsigner
 from serializers.consignments import ConsignmentSerializer, getConsignmentSerializer
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
+from utils.edd import calculate_expected_delivery
 
 @api_view(["GET"])
 def getConsignments(request):
@@ -165,6 +166,17 @@ def createConsignment(request):
         return HttpResponse.BadRequest(message="Invalid request")
     
     try:
+        
+        # fetch consignee tat
+        try:
+            tat = ConsigneeConsigner.objects.get(consigner_id=req_data['consigner_id']).tat
+            if tat is None:
+                tat = 1
+        except Exception as e:
+            print("Error fetching consignee tat: \n", e)
+        
+        req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
+        
         serializer = ConsignmentSerializer(data=req_data)
         if serializer.is_valid():
             serializer.save()

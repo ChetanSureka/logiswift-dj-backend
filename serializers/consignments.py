@@ -26,6 +26,7 @@ class getConsignmentSerializer(serializers.ModelSerializer):
             "consignerName",
             "vendor_id",
             "vendorName",
+            "expectedDeliveryDate",
         ]
 
 
@@ -52,6 +53,8 @@ class ConsignmentSerializer(serializers.ModelSerializer):
             "consignerName",
             "vendor_id",
             "vendorName",
+            
+            "expectedDeliveryDate",
         ]
 
     def get_consigneeName(self, obj):

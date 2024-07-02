@@ -192,6 +192,8 @@ class ConsigneeConsigner(models.Model):
     email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Email")
     pincode = models.CharField(max_length=7, verbose_name="Pincode", null=True, blank=True)
     phone = models.CharField(default=0, max_length=10, verbose_name="Phone", null=True, blank=True)
+    tat = models.IntegerField(default=None, max_length=3, verbose_name="Tat", null=True, blank=True)
+    
     location_type = models.CharField(max_length=100, verbose_name="Location Type",
         choices=[
             ("ODA","ODA"),
@@ -224,11 +226,13 @@ class Consignment(models.Model):
     # weight = models.IntegerField(default=0, verbose_name="Weight in kgs")
     vendor_id = models.ForeignKey(VendorDetails, on_delete=models.CASCADE, related_name="vendor_id", verbose_name="Channel Partner", null=True, blank=True)
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="consignment_user_id", verbose_name="User", default=1)
-    status = models.CharField(max_length=100, choices=ConsignemntStatusChoices, default="Created", verbose_name="Consignment Status")
+    status = models.CharField(max_length=100, choices=ConsignemntStatusChoices, default="created", verbose_name="Consignment Status")
     pod = models.FileField(upload_to='pod/', blank=True, null=True, verbose_name="Proof of Delivery")
-    mode = models.CharField(max_length=100, choices=ConsignmentModeChoices, default="Forward", verbose_name="Consignment Mode")
+    mode = models.CharField(max_length=100, choices=ConsignmentModeChoices, default="forward", verbose_name="Consignment Mode")
     reverseDocketNo = models.CharField(default=0, max_length=100, verbose_name="Reverse Docket Number", blank=True, null=True)
     remarks = models.CharField(max_length=500, verbose_name="Remarks", blank=True, null=True)
+    
+    expectedDeliveryDate = models.DateField(default=None, null=True, blank=True)
     # location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, related_name="consignment_location", verbose_name="Location", default=None, null=True, blank=True)
 
     # distributor_ids = models.CharField(max_length=200, default=None, null=True, blank=True)
@@ -252,3 +256,21 @@ class Consignment(models.Model):
         verbose_name = "Consignment"
         verbose_name_plural = "Consignments"
 
+
+class PublicHolidays(models.Model):
+    id = models.AutoField(primary_key=True)
+    
+    date = models.DateField()
+    description = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.description
+    
+    class Meta:
+        verbose_name = "Public Holiday"
+        verbose_name_plural = "Public Holidays"
+    
+    

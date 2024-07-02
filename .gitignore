@@ -159,5 +159,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 tat.xlsx
+utils/edd_update.py
 utils/tat_update_script.py
 utils/update_tat_queries.sql

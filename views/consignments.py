@@ -78,7 +78,6 @@ def getFilteredConsignments(request):
         
         total_count = Consignment.objects.count()
         
-        
         if status:
             queryset = queryset.filter(status=status)
         if mode:
@@ -102,6 +101,8 @@ def getFilteredConsignments(request):
             except ValueError:
                 pass
         
+        total_results = len(queryset)
+        
         if limit or offset:
             limit = int(limit)
             offset = int(offset)
@@ -111,11 +112,12 @@ def getFilteredConsignments(request):
         serilaizer = getConsignmentSerializer(queryset, many=True)
         data = serilaizer.data
         response_data = {
-            "total_count": total_count,
+            # "total_count": total_count,
             "limit": limit,
             "offset": offset,
             "results_count": len(data),
-            "results": data
+            "total_results": total_results,
+            "results": data,
         }
         return HttpResponse.Ok(data=response_data, message="Filtered consignments fetched successfully")
     

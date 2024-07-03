@@ -78,7 +78,6 @@ def getFilteredConsignments(request):
         
         total_count = Consignment.objects.count()
         
-        
         if status:
             queryset = queryset.filter(status=status)
         if mode:
@@ -102,6 +101,8 @@ def getFilteredConsignments(request):
             except ValueError:
                 pass
         
+        total_results = len(queryset)
+        
         if limit or offset:
             limit = int(limit)
             offset = int(offset)
@@ -111,11 +112,12 @@ def getFilteredConsignments(request):
         serilaizer = getConsignmentSerializer(queryset, many=True)
         data = serilaizer.data
         response_data = {
-            "total_count": total_count,
+            # "total_count": total_count,
             "limit": limit,
             "offset": offset,
             "results_count": len(data),
-            "results": data
+            "total_results": total_results,
+            "results": data,
         }
         return HttpResponse.Ok(data=response_data, message="Filtered consignments fetched successfully")
     
@@ -219,6 +221,17 @@ def updateConsignment(request, lr):
     
     
     try:
+        
+        # fetch consignee tat
+        try:
+            tat = ConsigneeConsigner.objects.get(consigner_id=req_data['consigner_id']).tat
+            if tat is None:
+                tat = 1
+        except Exception as e:
+            print("Error fetching consignee tat: \n", e)
+        
+        req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
+        
         serializer = ConsignmentSerializer(consignment, data=req_data, partial=True)
         if serializer.is_valid():
             status = serializer.validated_data.get("status", None)

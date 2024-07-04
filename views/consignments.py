@@ -1,4 +1,5 @@
-from django.db.models import Q, F
+from datetime import datetime
+from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
 from crm.models import Consignment, ConsigneeConsigner
 from serializers.consignments import ConsignmentSerializer, getConsignmentSerializer
@@ -60,6 +61,7 @@ def getConsignmentByLr(request, lr):
 @api_view(["GET"])
 def getFilteredConsignments(request):
     status = request.query_params.get('status')
+    tatStatus = request.query_params.get('tatStatus')
     mode = request.query_params.get('mode')
     from_date = request.query_params.get('fromDate')
     to_date = request.query_params.get('toDate')
@@ -67,6 +69,9 @@ def getFilteredConsignments(request):
     channel_partner = request.query_params.get('channelPartner')
     limit = request.query_params.get('limit')
     offset = request.query_params.get('offset')
+    search = request.query_params.get('search')
+    sort_by = request.query_params.get('sort_by', 'lrDate')
+    sort_order = request.query_params.get('sort_order', '-1')
     
     
     try:
@@ -74,13 +79,28 @@ def getFilteredConsignments(request):
             consigneeName=F('consignee_id__name'),
             consignerName=F('consigner_id__name'),
             vendorName=F('vendor_id__name')
-        ).order_by('-lrDate')
+        )
         
         total_count = Consignment.objects.count()
         
-        
+        if search:
+            queryset = queryset.filter(
+                Q(lr=search) | Q(lr__startswith=search) | Q(lr__contains=search)
+            ).annotate(
+                search_order=Case(
+                    When(lr=search, then=Value(0)),
+                    When(lr__startswith=search, then=Value(1)),
+                    When(lr__contains=search, then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                )
+            ).order_by('search_order', 'lr')
+
+
         if status:
             queryset = queryset.filter(status=status)
+        if tatStatus:
+            queryset = queryset.filter(tatstatus=tatStatus)
         if mode:
             queryset = queryset.filter(mode=mode)
         if from_date:
@@ -102,6 +122,27 @@ def getFilteredConsignments(request):
             except ValueError:
                 pass
         
+        # Sorting
+        sort_order_prefix = '-' if sort_order == '-1' else ''
+
+        # If sorting by 'lr' numerically
+        if sort_by == 'lr':
+            queryset = sorted(queryset, key=lambda x: int(x.lr))
+        
+            # If sorting direction needs to be reversed
+            if sort_order_prefix == '-':
+                queryset = reversed(queryset)
+        
+            # Convert queryset to a list to get its length
+            queryset = list(queryset)
+        
+        else:
+            queryset = queryset.order_by(f"{sort_order_prefix}{sort_by}")
+            # queryset = queryset.order_by("-lrDate")
+
+        
+        total_results = len(queryset)
+        
         if limit or offset:
             limit = int(limit)
             offset = int(offset)
@@ -111,11 +152,12 @@ def getFilteredConsignments(request):
         serilaizer = getConsignmentSerializer(queryset, many=True)
         data = serilaizer.data
         response_data = {
-            "total_count": total_count,
+            # "total_count": total_count,
             "limit": limit,
             "offset": offset,
             "results_count": len(data),
-            "results": data
+            "total_results": total_results,
+            "results": data,
         }
         return HttpResponse.Ok(data=response_data, message="Filtered consignments fetched successfully")
     
@@ -234,14 +276,28 @@ def updateConsignment(request, lr):
         if serializer.is_valid():
             status = serializer.validated_data.get("status", None)
             deliveryDate = serializer.validated_data.get("deliveryDate", None)
+            expectedDeliveryDate = serializer.validated_data.get("expectedDeliveryDate", None)
+            
             if status == "delivered" and deliveryDate is None:
-                serializer.validated_data["deliveryDate"] = timezone.now().date()
+                deliveryDate = timezone.now().date()
+                serializer.validated_data["deliveryDate"] = deliveryDate
+            
+            if status == "delivered" and deliveryDate and expectedDeliveryDate:
+                deliveryDate = datetime.strptime(str(deliveryDate), '%Y-%m-%d').date()
+                expectedDeliveryDate = datetime.strptime(str(expectedDeliveryDate), '%Y-%m-%d').date()
+                
+                variance = (deliveryDate - expectedDeliveryDate).days
+                tatStatus = "passed" if deliveryDate <= expectedDeliveryDate else "failed"
+                
+                serializer.validated_data["variance"] = variance
+                serializer.validated_data["tatstatus"] = tatStatus
+
             serializer.save()
             return HttpResponse.Ok(data=serializer.data, message="Consignment updated successfully")
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:
-        print("[ERROR] failed to create consignment: ", e)
-        return HttpResponse.Failed(message="Failed to create consignment", error=e)
+        print("[ERROR] failed to update consignment: ", e)
+        return HttpResponse.Failed(message="Failed to update consignment")
 
 
 @api_view(["GET"])

@@ -55,6 +55,16 @@ def lr_ofd():
     return consignment_count
 
 
+def tat_status():
+    '''
+    Filter consignments for tat status and return count
+    '''
+    passed_count = Consignment.objects.filter(tatstatus="passed").count()
+    failed_count = Consignment.objects.filter(tatstatus="failed").count()
+    
+    print("passed:", passed_count, "failed:", failed_count)
+    return [passed_count, failed_count]
+
 
 def generate_dashboard():
     dashboard_data = {
@@ -63,6 +73,8 @@ def generate_dashboard():
         "delivered_i_current_month": current_month_delivered_lrs(),
         "out_for Delivery_i_total": lr_ofd(),
         "total_weight_i_current_month": current_month_total_weight(),
+        # "tat_passed_i_all_time": tat_status()[0],
+        # "tat_failed_i_all_time": tat_status()[1],
     }
     
     return dashboard_data

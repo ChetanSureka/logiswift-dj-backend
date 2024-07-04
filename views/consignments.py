@@ -61,6 +61,7 @@ def getConsignmentByLr(request, lr):
 @api_view(["GET"])
 def getFilteredConsignments(request):
     status = request.query_params.get('status')
+    tatStatus = request.query_params.get('tatStatus')
     mode = request.query_params.get('mode')
     from_date = request.query_params.get('fromDate')
     to_date = request.query_params.get('toDate')
@@ -98,6 +99,8 @@ def getFilteredConsignments(request):
 
         if status:
             queryset = queryset.filter(status=status)
+        if tatStatus:
+            queryset = queryset.filter(tatstatus=tatStatus)
         if mode:
             queryset = queryset.filter(mode=mode)
         if from_date:
@@ -125,15 +128,17 @@ def getFilteredConsignments(request):
         # If sorting by 'lr' numerically
         if sort_by == 'lr':
             queryset = sorted(queryset, key=lambda x: int(x.lr))
+        
+            # If sorting direction needs to be reversed
+            if sort_order_prefix == '-':
+                queryset = reversed(queryset)
+        
+            # Convert queryset to a list to get its length
+            queryset = list(queryset)
+        
         else:
             queryset = queryset.order_by(f"{sort_order_prefix}{sort_by}")
-
-        # If sorting direction needs to be reversed
-        if sort_order_prefix == '-':
-            queryset = reversed(queryset)
-
-        # Convert queryset to a list to get its length
-        queryset = list(queryset)
+            # queryset = queryset.order_by("-lrDate")
 
         
         total_results = len(queryset)

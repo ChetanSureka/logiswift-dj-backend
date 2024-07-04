@@ -1,4 +1,5 @@
-from django.db.models import Q, F
+from datetime import datetime
+from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
 from crm.models import Consignment, ConsigneeConsigner
 from serializers.consignments import ConsignmentSerializer, getConsignmentSerializer
@@ -67,6 +68,9 @@ def getFilteredConsignments(request):
     channel_partner = request.query_params.get('channelPartner')
     limit = request.query_params.get('limit')
     offset = request.query_params.get('offset')
+    search = request.query_params.get('search')
+    sort_by = request.query_params.get('sort_by', 'lrDate')
+    sort_order = request.query_params.get('sort_order', '-1')
     
     
     try:
@@ -74,10 +78,24 @@ def getFilteredConsignments(request):
             consigneeName=F('consignee_id__name'),
             consignerName=F('consigner_id__name'),
             vendorName=F('vendor_id__name')
-        ).order_by('-lrDate')
+        )
         
         total_count = Consignment.objects.count()
         
+        if search:
+            queryset = queryset.filter(
+                Q(lr=search) | Q(lr__startswith=search) | Q(lr__contains=search)
+            ).annotate(
+                search_order=Case(
+                    When(lr=search, then=Value(0)),
+                    When(lr__startswith=search, then=Value(1)),
+                    When(lr__contains=search, then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                )
+            ).order_by('search_order', 'lr')
+
+
         if status:
             queryset = queryset.filter(status=status)
         if mode:
@@ -100,6 +118,23 @@ def getFilteredConsignments(request):
                 queryset = queryset.filter(vendor_id=channel_partner)
             except ValueError:
                 pass
+        
+        # Sorting
+        sort_order_prefix = '-' if sort_order == '-1' else ''
+
+        # If sorting by 'lr' numerically
+        if sort_by == 'lr':
+            queryset = sorted(queryset, key=lambda x: int(x.lr))
+        else:
+            queryset = queryset.order_by(f"{sort_order_prefix}{sort_by}")
+
+        # If sorting direction needs to be reversed
+        if sort_order_prefix == '-':
+            queryset = reversed(queryset)
+
+        # Convert queryset to a list to get its length
+        queryset = list(queryset)
+
         
         total_results = len(queryset)
         
@@ -236,14 +271,28 @@ def updateConsignment(request, lr):
         if serializer.is_valid():
             status = serializer.validated_data.get("status", None)
             deliveryDate = serializer.validated_data.get("deliveryDate", None)
+            expectedDeliveryDate = serializer.validated_data.get("expectedDeliveryDate", None)
+            
             if status == "delivered" and deliveryDate is None:
-                serializer.validated_data["deliveryDate"] = timezone.now().date()
+                deliveryDate = timezone.now().date()
+                serializer.validated_data["deliveryDate"] = deliveryDate
+            
+            if status == "delivered" and deliveryDate and expectedDeliveryDate:
+                deliveryDate = datetime.strptime(str(deliveryDate), '%Y-%m-%d').date()
+                expectedDeliveryDate = datetime.strptime(str(expectedDeliveryDate), '%Y-%m-%d').date()
+                
+                variance = (deliveryDate - expectedDeliveryDate).days
+                tatStatus = "passed" if deliveryDate <= expectedDeliveryDate else "failed"
+                
+                serializer.validated_data["variance"] = variance
+                serializer.validated_data["tatstatus"] = tatStatus
+
             serializer.save()
             return HttpResponse.Ok(data=serializer.data, message="Consignment updated successfully")
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:
-        print("[ERROR] failed to create consignment: ", e)
-        return HttpResponse.Failed(message="Failed to create consignment")
+        print("[ERROR] failed to update consignment: ", e)
+        return HttpResponse.Failed(message="Failed to update consignment")
 
 
 @api_view(["GET"])

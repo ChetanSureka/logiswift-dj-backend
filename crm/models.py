@@ -192,7 +192,7 @@ class ConsigneeConsigner(models.Model):
     email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Email")
     pincode = models.CharField(max_length=7, verbose_name="Pincode", null=True, blank=True)
     phone = models.CharField(default=0, max_length=10, verbose_name="Phone", null=True, blank=True)
-    tat = models.IntegerField(default=None, max_length=3, verbose_name="Tat", null=True, blank=True)
+    tat = models.IntegerField(default=None, verbose_name="Tat", null=True, blank=True)
     
     location_type = models.CharField(max_length=100, verbose_name="Location Type",
         choices=[
@@ -233,6 +233,10 @@ class Consignment(models.Model):
     remarks = models.CharField(max_length=500, verbose_name="Remarks", blank=True, null=True)
     
     expectedDeliveryDate = models.DateField(default=None, null=True, blank=True)
+    tatstatus = models.CharField(max_length=10, blank=True, null=True, choices=[
+        ["passed", "passed"],
+        ["failed", "failed"]], default=None)
+    variance = models.IntegerField(null=True, blank=True, default=None)
     # location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, related_name="consignment_location", verbose_name="Location", default=None, null=True, blank=True)
 
     # distributor_ids = models.CharField(max_length=200, default=None, null=True, blank=True)
@@ -250,6 +254,8 @@ class Consignment(models.Model):
 
     def __str__(self):
         return f"{self.lr}"
+    
+    
     
 
     class Meta:

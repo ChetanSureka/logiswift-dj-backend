@@ -237,6 +237,15 @@ class Consignment(models.Model):
         ["passed", "passed"],
         ["failed", "failed"]], default=None)
     variance = models.IntegerField(null=True, blank=True, default=None)
+    
+    
+    # additional attributes
+    delayed = models.BooleanField(default=False)
+    delayedReason = models.TextField(blank=True, null=True, default=None)
+    notified = models.BooleanField(default=False)
+    notifiedDate = models.DateField(null=True, blank=True, default=None)
+    
+    
     # location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, related_name="consignment_location", verbose_name="Location", default=None, null=True, blank=True)
 
     # distributor_ids = models.CharField(max_length=200, default=None, null=True, blank=True)
@@ -280,3 +289,51 @@ class PublicHolidays(models.Model):
         verbose_name_plural = "Public Holidays"
     
     
+
+class Billings(models.Model):
+    id = models.AutoField(primary_key=True)
+    
+    lr = models.ForeignKey(Consignment, on_delete=models.DO_NOTHING, related_name="consignment_billings")
+    
+    tatstatus = models.CharField(max_length=10, blank=True, null=True, choices=[
+        ["passed", "passed"],
+        ["failed", "failed"]], default=None)
+    variance = models.IntegerField(null=True, blank=True, default=None)
+    
+    consigneeId = models.IntegerField(null=True, blank=True, default=None)
+    consignerId = models.IntegerField(null=True, blank=True, default=None)
+    locationId = models.IntegerField(null=True, blank=True, default=None)
+    locationName = models.CharField(max_length=300, null=True, blank=True, default=None)
+    consigneeName = models.CharField(max_length=300, null=True, blank=True, default=None)
+    consignerName = models.CharField(max_length=300, null=True, blank=True, default=None)
+    
+    
+    chargeableWeight = models.IntegerField()
+    quantity = models.IntegerField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    cp_chargeableWeight = models.IntegerField()
+    cp_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    cp_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    cp_additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    cp_odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    cp_totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    vehicleCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    miscCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    miscRemark = models.TextField(default=None, null=True, blank=True)
+    labourCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    officeExpense = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=255, null=True, blank=True, default=None)
+    updated_by = models.CharField(max_length=255, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return f"Billing {self.id}"

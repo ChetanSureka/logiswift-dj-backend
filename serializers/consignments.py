@@ -55,6 +55,10 @@ class ConsignmentSerializer(serializers.ModelSerializer):
             "vendorName",
             
             "expectedDeliveryDate",
+            "delayed",
+            "delayedReason",
+            "notified",
+            "notifiedDate",
         ]
 
     def get_consigneeName(self, obj):
@@ -103,13 +107,28 @@ class ConsignmentSerializer(serializers.ModelSerializer):
     def validate(self, data):
         lrDate = data.get('lrDate')
         deliveryDate = data.get('deliveryDate')
+        delayed = data.get('delayed', False)
+        delayedReason = data.get('delayedReason', None)
+        notified = data.get('notified', False)
+        notifiedDate = data.get('notifiedDate', None)
         errors = {}
 
+        # lr date and delivery date validations
         if lrDate and deliveryDate and deliveryDate < lrDate:
-            # raise serializers.ValidationError("Delivery date cannot be before LR date.")
             errors["deliveryDate"] = "Delivery date cannot be before LR date"
         
+        # delayed validations
+        if delayed and not delayedReason:
+            errors["delayedReason"] = "Delayed reason must be provided when delayed is true."
+        if not delayed and delayedReason:
+            errors["delayedReason"] = "Delayed reason must be empty when delayed is false."
         
+        # notified validations
+        if notified and not notifiedDate:
+            errors["notifiedDate"] = "Notified date must be provided when notified is true."
+        if not notified and notifiedDate:
+            errors["notifiedDate"] = "Notified date must be empty when notified is false."
+
         if errors:
             raise serializers.ValidationError(errors)
         return data

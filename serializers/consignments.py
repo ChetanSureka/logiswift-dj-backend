@@ -59,6 +59,8 @@ class ConsignmentSerializer(serializers.ModelSerializer):
             "delayedReason",
             "notified",
             "notifiedDate",
+            "additionalCharges",
+            "additionalChargesReason",
         ]
 
     def get_consigneeName(self, obj):

@@ -244,6 +244,8 @@ class Consignment(models.Model):
     delayedReason = models.TextField(blank=True, null=True, default=None)
     notified = models.BooleanField(default=False)
     notifiedDate = models.DateField(null=True, blank=True, default=None)
+    additionalCharges = models.DecimalField(null=True, blank=True, default=True, max_digits=10, decimal_places=2)
+    additionalChargesReason = models.TextField(null=True, blank=True, default=None)
     
     
     # location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, related_name="consignment_location", verbose_name="Location", default=None, null=True, blank=True)

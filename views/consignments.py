@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import datetime
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
@@ -211,13 +212,22 @@ def createConsignment(request):
         
         # fetch consignee tat
         try:
-            tat = ConsigneeConsigner.objects.get(consigner_id=req_data['consigner_id']).tat
+            tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
             if tat is None:
-                tat = 1
+                tat = 0
         except Exception as e:
             print("Error fetching consignee tat: \n", e)
         
         req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
+        
+        # Ensure weight and additionalCharges are in decimal format
+        try:
+            req_data['weight'] = Decimal(req_data.get('weight', 0))
+            req_data['additionalCharges'] = Decimal(req_data.get('additionalCharges', 0))
+        except (TypeError, ValueError) as e:
+            print("[ERROR] Invalid decimal values: ", e)
+            return HttpResponse.BadRequest(message="Invalid decimal values.")
+        
         
         serializer = ConsignmentSerializer(data=req_data)
         if serializer.is_valid():
@@ -264,9 +274,9 @@ def updateConsignment(request, lr):
         
         # fetch consignee tat
         try:
-            tat = ConsigneeConsigner.objects.get(consigner_id=req_data['consigner_id']).tat
+            tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
             if tat is None:
-                tat = 1
+                tat = 0
         except Exception as e:
             print("Error fetching consignee tat: \n", e)
         

@@ -7,6 +7,7 @@ from serializers.consignments import ConsignmentSerializer, getConsignmentSerial
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
 from utils.edd import calculate_expected_delivery
+from utils.bill_calculator import calculate_bill
 
 @api_view(["GET"])
 def getConsignments(request):
@@ -288,21 +289,27 @@ def updateConsignment(request, lr):
             deliveryDate = serializer.validated_data.get("deliveryDate", None)
             expectedDeliveryDate = serializer.validated_data.get("expectedDeliveryDate", None)
             
-            if status == "delivered" and deliveryDate is None:
-                deliveryDate = timezone.now().date()
-                serializer.validated_data["deliveryDate"] = deliveryDate
+            if status == "delivered":
             
-            if status == "delivered" and deliveryDate and expectedDeliveryDate:
-                deliveryDate = datetime.strptime(str(deliveryDate), '%Y-%m-%d').date()
-                expectedDeliveryDate = datetime.strptime(str(expectedDeliveryDate), '%Y-%m-%d').date()
+                if deliveryDate is None:
+                    deliveryDate = timezone.now().date()
+                    serializer.validated_data["deliveryDate"] = deliveryDate
+            
+                if deliveryDate and expectedDeliveryDate:
+                    deliveryDate = datetime.strptime(str(deliveryDate), '%Y-%m-%d').date()
+                    expectedDeliveryDate = datetime.strptime(str(expectedDeliveryDate), '%Y-%m-%d').date()
+                    
+                    variance = (deliveryDate - expectedDeliveryDate).days
+                    tatStatus = "passed" if deliveryDate <= expectedDeliveryDate else "failed"
+                    
+                    serializer.validated_data["variance"] = variance
+                    serializer.validated_data["tatstatus"] = tatStatus
                 
-                variance = (deliveryDate - expectedDeliveryDate).days
-                tatStatus = "passed" if deliveryDate <= expectedDeliveryDate else "failed"
-                
-                serializer.validated_data["variance"] = variance
-                serializer.validated_data["tatstatus"] = tatStatus
-
-            serializer.save()
+                saved_consignment = serializer.save()
+                bill = calculate_bill(saved_consignment)
+                serializer.data["bill"] = bill.id
+            else:
+                serializer.save()
             return HttpResponse.Ok(data=serializer.data, message="Consignment updated successfully")
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:

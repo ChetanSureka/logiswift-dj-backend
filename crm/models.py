@@ -194,6 +194,9 @@ class ConsigneeConsigner(models.Model):
     phone = models.CharField(default=0, max_length=10, verbose_name="Phone", null=True, blank=True)
     tat = models.IntegerField(default=None, verbose_name="Tat", null=True, blank=True)
     
+    rate = models.IntegerField(default=0, verbose_name="Rate", null=True, blank=True)
+    odaCharge = models.IntegerField(default=0, verbose_name="ODA Charges", null=True, blank=True)
+    
     location_type = models.CharField(max_length=100, verbose_name="Location Type",
         choices=[
             ("ODA","ODA"),
@@ -244,7 +247,7 @@ class Consignment(models.Model):
     delayedReason = models.TextField(blank=True, null=True, default=None)
     notified = models.BooleanField(default=False)
     notifiedDate = models.DateField(null=True, blank=True, default=None)
-    additionalCharges = models.DecimalField(null=True, blank=True, default=True, max_digits=10, decimal_places=2)
+    additionalCharges = models.DecimalField(null=True, blank=True, default=0, max_digits=10, decimal_places=2)
     additionalChargesReason = models.TextField(null=True, blank=True, default=None)
     
     
@@ -310,27 +313,27 @@ class Billings(models.Model):
     consignerName = models.CharField(max_length=300, null=True, blank=True, default=None)
     
     
-    chargeableWeight = models.IntegerField()
+    chargeableWeight = models.IntegerField(default=0)
     quantity = models.IntegerField()
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
-    additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    totalAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
-    cp_chargeableWeight = models.IntegerField()
-    cp_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    cp_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    cp_additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    cp_odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    cp_totalAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    cp_chargeableWeight = models.IntegerField(default=0)
+    cp_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cp_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cp_additionalCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    cp_odaCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    cp_totalAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
-    vehicleCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    miscCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    vehicleCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    miscCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     miscRemark = models.TextField(default=None, null=True, blank=True)
-    labourCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
-    officeExpense = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None)
+    labourCharge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    officeExpense = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

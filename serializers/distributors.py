@@ -8,5 +8,16 @@ class DistributorSerializer(serializers.ModelSerializer):
         model = ConsigneeConsigner
         fields = [
             "id",
-            "name"
+            "name",
+            "address",
+            "destination",
+            
+            "locationMappingId",
+            "state",
+            "email",
+            "phone",
+            
+            "tat",
+            "rate",
+            "odaCharge",
         ]

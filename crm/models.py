@@ -191,7 +191,7 @@ class ConsigneeConsigner(models.Model):
     state = models.CharField(max_length=50, verbose_name="State", null=True, blank=True)
     email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Email")
     pincode = models.CharField(max_length=7, verbose_name="Pincode", null=True, blank=True)
-    phone = models.CharField(default=0, max_length=10, verbose_name="Phone", null=True, blank=True)
+    phone = models.CharField(default=None, max_length=10, verbose_name="Phone", null=True, blank=True)
     tat = models.IntegerField(default=None, verbose_name="Tat", null=True, blank=True)
     
     rate = models.IntegerField(default=0, verbose_name="Rate", null=True, blank=True)

@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 @api_view(["GET"])
 def getDistributor(request, id):
     try:
-        distributor = ConsigneeConsigner.objects.get(id=id, delete=False)
+        distributor = ConsigneeConsigner.objects.get(id=id, deleted=False)
         serailizer = DistributorSerializer(distributor)
         return HttpResponse.Ok(data=serailizer.data, message="Distributor fetched successfully")
     

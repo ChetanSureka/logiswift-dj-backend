@@ -191,7 +191,7 @@ class ConsigneeConsigner(models.Model):
     state = models.CharField(max_length=50, verbose_name="State", null=True, blank=True)
     email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Email")
     pincode = models.CharField(max_length=7, verbose_name="Pincode", null=True, blank=True)
-    phone = models.CharField(default=0, max_length=10, verbose_name="Phone", null=True, blank=True)
+    phone = models.CharField(default=None, max_length=10, verbose_name="Phone", null=True, blank=True)
     tat = models.IntegerField(default=None, verbose_name="Tat", null=True, blank=True)
     
     rate = models.IntegerField(default=0, verbose_name="Rate", null=True, blank=True)
@@ -203,6 +203,7 @@ class ConsigneeConsigner(models.Model):
             ("Normal","Normal")
         ], default="Normal")
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="user_id", default=1, verbose_name="Users")
+    deleted = models.BooleanField(default=False)
 
     createdDate = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     createdBy = models.CharField(max_length=100, default=0, verbose_name="Created By")
@@ -212,6 +213,10 @@ class ConsigneeConsigner(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+    def soft_delete(self):
+        self.deleted = True
+        return self.save()
     
     class Meta:
         verbose_name = "Distributor"
@@ -298,7 +303,7 @@ class PublicHolidays(models.Model):
 class Billings(models.Model):
     id = models.AutoField(primary_key=True)
     
-    lr = models.ForeignKey(Consignment, on_delete=models.DO_NOTHING, related_name="consignment_billings")
+    lr = models.ForeignKey(Consignment, on_delete=models.CASCADE, related_name="consignment_billings")
     
     tatstatus = models.CharField(max_length=10, blank=True, null=True, choices=[
         ["passed", "passed"],

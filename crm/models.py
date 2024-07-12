@@ -203,6 +203,7 @@ class ConsigneeConsigner(models.Model):
             ("Normal","Normal")
         ], default="Normal")
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="user_id", default=1, verbose_name="Users")
+    deleted = models.BooleanField(default=False)
 
     createdDate = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     createdBy = models.CharField(max_length=100, default=0, verbose_name="Created By")
@@ -212,6 +213,10 @@ class ConsigneeConsigner(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+    def soft_delete(self):
+        self.deleted = True
+        return self.save()
     
     class Meta:
         verbose_name = "Distributor"

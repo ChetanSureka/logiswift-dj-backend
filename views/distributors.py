@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 @api_view(["GET"])
 def getDistributor(request, id):
     try:
-        distributor = ConsigneeConsigner.objects.get(id=id)
+        distributor = ConsigneeConsigner.objects.get(id=id, delete=False)
         serailizer = DistributorSerializer(distributor)
         return HttpResponse.Ok(data=serailizer.data, message="Distributor fetched successfully")
     
@@ -27,7 +27,7 @@ def getDistributors(request):
     
     
     try:
-        queryset = ConsigneeConsigner.objects.all()
+        queryset = ConsigneeConsigner.objects.filter(deleted=False)
         
         if search:
             queryset = queryset.filter(
@@ -82,7 +82,7 @@ def createDistributors(request):
 def updateDistributors(request, id):
     
     try:
-        distributor = ConsigneeConsigner.objects.get(id=id)
+        distributor = ConsigneeConsigner.objects.get(id=id, deleted=False)
     except ConsigneeConsigner.DoesNotExist:
         return HttpResponse.BadRequest(message="Distributor does not exist")
 
@@ -100,14 +100,15 @@ def updateDistributors(request, id):
 @api_view(["DELETE"])
 def deleteDistributor(request, id):
     try:
-        distributor = ConsigneeConsigner.objects.get(id=id)
+        distributor = ConsigneeConsigner.objects.get(id=id, deleted=False)
     except ConsigneeConsigner.DoesNotExist:
         return HttpResponse.BadRequest(message="Distributor does not exist")
     
     try:
-        distributor.delete()
+        distributor.soft_delete()
         return HttpResponse.Ok(message="Distributor deleted successfully")
     except Exception as e:
+        print("[ERROR] deleting distributor: ", e)
         return HttpResponse.Failed(message="An error occurred while deleting the distributor")
 
 

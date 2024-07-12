@@ -303,7 +303,7 @@ class PublicHolidays(models.Model):
 class Billings(models.Model):
     id = models.AutoField(primary_key=True)
     
-    lr = models.ForeignKey(Consignment, on_delete=models.DO_NOTHING, related_name="consignment_billings")
+    lr = models.ForeignKey(Consignment, on_delete=models.CASCADE, related_name="consignment_billings")
     
     tatstatus = models.CharField(max_length=10, blank=True, null=True, choices=[
         ["passed", "passed"],

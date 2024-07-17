@@ -49,7 +49,7 @@ bill_id -> BillingObject.id
 
 
 import math
-from crm.models import Billings
+from crm.models import Billings, Consignment
 
 def custom_round(x):
     '''
@@ -64,17 +64,23 @@ def custom_round(x):
     else:
         return math.ceil(x)
 
-def calculate_bill(consignment):
+def calculate_bill(consignment: Consignment):
     weight = consignment.weight
-    additionalCharges = 0 if consignment.additionalCharges is None else consignment.additionalCharges
+    additionalCharges = 0 if consignment.additionalCharges is None or 1 else consignment.additionalCharges
 
-    consigner = consignment.consigner_id
     consignee = consignment.consignee_id
+    consigner = consignment.consigner_id
 
     rate = 0 if consigner.rate is None else consigner.rate
     odaCharge = 0 if consigner.odaCharge is None else consigner.odaCharge
-
-    chargable_weight = custom_round(weight)
+    
+    rounded_weight = custom_round(weight)
+    if rounded_weight <= 15:
+        chargable_weight = 15
+    elif rounded_weight > 15:
+        chargable_weight = rounded_weight
+        
+    
     amount = (chargable_weight * rate) + odaCharge
     if additionalCharges is None:
         additionalCharges = 0

@@ -73,8 +73,14 @@ def calculate_bill(consignment: Consignment):
 
     rate = 0 if consigner.rate is None else consigner.rate
     odaCharge = 0 if consigner.odaCharge is None else consigner.odaCharge
-
-    chargable_weight = custom_round(weight)
+    
+    rounded_weight = custom_round(weight)
+    if rounded_weight <= 15:
+        chargable_weight = 15
+    elif rounded_weight > 15:
+        chargable_weight = rounded_weight
+        
+    
     amount = (chargable_weight * rate) + odaCharge
     if additionalCharges is None:
         additionalCharges = 0

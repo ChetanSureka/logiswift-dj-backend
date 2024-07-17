@@ -69,14 +69,13 @@ def bulk_create_bills(request):
     
     try:
         consignments = Consignment.objects.filter(
-            Q(lrDate__gte=fromDate),
-            Q(lrDate__lte=toDate),
+            Q(deliveryDate__gte=fromDate),
+            Q(deliveryDate__lte=toDate),
             Q(status="delivered"),
-            Q(mode="forward")
-        )
+        ).order_by("-lrDate")
         
-        missing_lrs = find_missing_numbers(consignments)
-        print("[INFO] Missing LRs: ", missing_lrs)
+        # missing_lrs = find_missing_numbers(consignments)
+        # print("[INFO] Missing LRs: ", missing_lrs)
         
         bills = []
         if consignments:

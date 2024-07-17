@@ -64,6 +64,8 @@ def getConsignmentByLr(request, lr):
 def getFilteredConsignments(request):
     status = request.query_params.get('status')
     tatStatus = request.query_params.get('tatStatus')
+    lrDelayed = request.query_params.get('delayed')
+    notified = request.query_params.get('notified')
     mode = request.query_params.get('mode')
     from_date = request.query_params.get('fromDate')
     to_date = request.query_params.get('toDate')
@@ -103,6 +105,18 @@ def getFilteredConsignments(request):
             queryset = queryset.filter(status=status)
         if tatStatus:
             queryset = queryset.filter(tatstatus=tatStatus)
+        if lrDelayed:
+            if lrDelayed == 'true':
+                queryset = queryset.filter(delayed=True)
+            else:
+                queryset = queryset.filter(delayed=False)
+        
+        if notified == "true":
+            if lrDelayed == 'true':
+                queryset = queryset.filter(delayed=True)
+            else:
+                queryset = queryset.filter(delayed=False)
+        
         if mode:
             queryset = queryset.filter(mode=mode)
         if from_date:

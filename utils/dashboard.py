@@ -63,24 +63,25 @@ class ConsignmentDashboard:
         stats = {
             "overall_stats": {
                 "total_weight_i_all_time": self.total_weight(),
+                "in_transit_i_all_time": self.total_intransit_lrs(),
+                "delivered_i_all_time": self.get_count({'status': 'delivered'}),
+                "out_for_delivery_i_all_time": self.lr_ofd(),
                 "tat_passed_i_all_time": self.tat_status_all_time("passed"),
                 "tat_failed_i_all_time": self.tat_status_all_time("failed"),
                 # "tat_going_to_fail_i_all_time": self.tat_going_to_fail_all_time(),
                 "lr_delayed_i_all_time": self.lr_status_all_time(True),
-                "in_transit_i_all_time": self.total_intransit_lrs(),
-                "delivered_i_all_time": self.get_count({'status': 'delivered'}),
-                "out_for_delivery_i_all_time": self.lr_ofd(),
             },
             
             "current_month": {
-                "tat_passed_i_current_month": self.tat_status_current_month("passed"),
-                "tat_failed_i_current_month": self.tat_status_current_month("failed"),
-                "tat_going_to_fail": self.tat_going_to_fail_current_month(),
                 "total_weight_i_current_month": self.current_month_total_weight(),
-                "lr_delayed_i_current_month": self.lr_status_current_month(True),
                 "in_transit_i_current_month": self.get_count({'status': 'in-transit', 'lrDate__year': self.current_year, 'lrDate__month': self.current_month}),
                 "delivered_i_current_month": self.current_month_delivered_lrs(),
                 "out_for_delivery_i_current_month": self.get_count({'status': 'out-for-delivery', 'lrDate__year': self.current_year, 'lrDate__month': self.current_month}),
+                
+                "tat_passed_i_current_month": self.tat_status_current_month("passed"),
+                "tat_failed_i_current_month": self.tat_status_current_month("failed"),
+                "tat_going_to_fail": self.tat_going_to_fail_current_month(),
+                "lr_delayed_i_current_month": self.lr_status_current_month(True),
             },
         }
         return stats

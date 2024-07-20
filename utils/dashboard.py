@@ -1,92 +1,161 @@
 from django.utils import timezone
-from django.db.models import Sum
-from datetime import date
+from django.db.models import Sum, Q
+from datetime import date, timedelta
 from crm.models import Consignment
 
-class ConsignmentDashboard:
-    def __init__(self):
-        self.current_month, self.current_year = self.get_current_month_year()
-        self.current_date = date.today()
+def get_current_month_year():
+    now = timezone.now()
+    return now.month, now.year
 
-    def get_current_month_year(self):
-        now = timezone.now()
-        return now.month, now.year
+def get_count(filter_kwargs):
+    return Consignment.objects.filter(**filter_kwargs).count()
 
-    def get_count(self, filter_kwargs):
-        return Consignment.objects.filter(**filter_kwargs).count()
+def get_total_weight():
+    return Consignment.objects.aggregate(total_weight=Sum('weight'))['total_weight'] or 0
 
-    def total_intransit_lrs(self):
-        return self.get_count({'status': 'in-transit'})
+def get_current_month_total_weight(start_date, end_date):
+    return Consignment.objects.filter(
+        Q(lrDate__gte=start_date, lrDate__lte=end_date) |
+        Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
+    ).aggregate(total_weight=Sum('weight'))['total_weight'] or 0
 
-    def current_month_delivered_lrs(self):
-        current_date = timezone.now()
-        current_month_start = current_date.replace(day=1)
-        return self.get_count({
-            'status': 'delivered',
-            'deliveryDate__gte': current_month_start,
-            'deliveryDate__lt': current_date.replace(month=current_date.month + 1, day=1)
-        })
-
-    def current_month_total_weight(self):
-        current_date = timezone.now()
-        current_month_start = current_date.replace(day=1)
-        return Consignment.objects.filter(
-            lrDate__gte=current_month_start,
-            lrDate__lt=current_date.replace(month=current_date.month + 1, day=1)
-        ).aggregate(total_weight=Sum('weight'))['total_weight'] or 0
-    
-    def total_weight(self):
-        return Consignment.objects.aggregate(total_weight=Sum('weight'))['total_weight'] or 0
-
-    def lr_ofd(self):
-        return self.get_count({'status': 'out-for-delivery'})
-
-    def tat_status_all_time(self, status):
-        return self.get_count({'tatstatus': status})
-
-    def tat_status_current_month(self, status):
-        return self.get_count({'tatstatus': status, 'lrDate__year': self.current_year, 'lrDate__month': self.current_month})
-
-    def tat_going_to_fail_all_time(self):
-        return self.get_count({'expectedDeliveryDate': self.current_date})
-
-    def tat_going_to_fail_current_month(self):
-        return self.get_count({'expectedDeliveryDate': self.current_date, 'lrDate__year': self.current_year, 'lrDate__month': self.current_month})
-
-    def lr_status_all_time(self, delayed):
-        return self.get_count({'delayed': delayed})
-
-    def lr_status_current_month(self, delayed):
-        return self.get_count({'delayed': delayed, 'lrDate__year': self.current_year, 'lrDate__month': self.current_month})
-
-    def generate_dashboard(self):
-        stats = {
-            "overall_stats": {
-                "total_weight_i_all_time": self.total_weight(),
-                "in_transit_i_all_time": self.total_intransit_lrs(),
-                "delivered_i_all_time": self.get_count({'status': 'delivered'}),
-                "out_for_delivery_i_all_time": self.lr_ofd(),
-                "tat_passed_i_all_time": self.tat_status_all_time("passed"),
-                "tat_failed_i_all_time": self.tat_status_all_time("failed"),
-                # "tat_going_to_fail_i_all_time": self.tat_going_to_fail_all_time(),
-                "lr_delayed_i_all_time": self.lr_status_all_time(True),
-            },
-            
-            "current_month": {
-                "total_weight_i_current_month": self.current_month_total_weight(),
-                "in_transit_i_current_month": self.get_count({'status': 'in-transit', 'lrDate__year': self.current_year, 'lrDate__month': self.current_month}),
-                "delivered_i_current_month": self.current_month_delivered_lrs(),
-                "out_for_delivery_i_current_month": self.get_count({'status': 'out-for-delivery', 'lrDate__year': self.current_year, 'lrDate__month': self.current_month}),
-                
-                "tat_passed_i_current_month": self.tat_status_current_month("passed"),
-                "tat_failed_i_current_month": self.tat_status_current_month("failed"),
-                "tat_going_to_fail": self.tat_going_to_fail_current_month(),
-                "lr_delayed_i_current_month": self.lr_status_current_month(True),
-            },
-        }
-        return stats
+def get_current_month_counts(status, start_date, end_date):
+    return get_count({
+        'status': status,
+        'lrDate__gte': start_date,
+        'lrDate__lte': end_date
+    })
 
 def generate_dashboard():
-    dashboard = ConsignmentDashboard()
-    result = dashboard.generate_dashboard()
-    return result
+    current_month, current_year = get_current_month_year()
+    current_date = date.today()
+    start_date = current_date.replace(day=1)
+    next_month = start_date + timedelta(days=32)
+    end_date = next_month.replace(day=1)
+
+    stats = {
+        "overall_stats": [
+            {
+                "title": "Total Weight",
+                "value": get_total_weight(),
+                "time": "all time",
+                "isclickable": False,
+                "url": None
+            },
+            {
+                "title": "In Transit",
+                "value": get_count({'status': 'in-transit'}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&status=in-transit",
+                "query_param": "status=in-transit"
+            },
+            {
+                "title": "Delivered",
+                "value": get_count({'status': 'delivered'}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&status=delivered",
+                "query_param": "status=delivered"
+            },
+            {
+                "title": "Out for Delivery",
+                "value": get_count({'status': 'out-for-delivery'}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&status=out-for-delivery",
+                "query_param": "status=out-for-delivery"
+            },
+            {
+                "title": "TAT Passed",
+                "value": get_count({'tatstatus': 'passed'}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&tatStatus=passed",
+                "query_param": "tatStatus=passed"
+            },
+            {
+                "title": "TAT Failed",
+                "value": get_count({'tatstatus': 'failed'}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&tatStatus=failed",
+                "query_param": "tatStatus=failed"
+            },
+            {
+                "title": "LR Delayed",
+                "value": get_count({'delayed': True}),
+                "time": "all time",
+                "isclickable": True,
+                "url": "consignments?limit=15&offset=0&delayed=true",
+                "query_param": "delayed=true"
+            }
+        ],
+        
+        "current_month": [
+            {
+                "title": "Total Weight",
+                "value": get_current_month_total_weight(start_date, end_date),
+                "time": "current month",
+                "isclickable": False,
+                "url": None
+            },
+            {
+                "title": "In Transit",
+                "value": get_current_month_counts('in-transit', start_date, end_date),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "Delivered",
+                "value": get_current_month_counts('delivered', start_date, end_date),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "Out for Delivery",
+                "value": get_current_month_counts('out-for-delivery', start_date, end_date),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "TAT Passed",
+                "value": get_count({'tatstatus': 'passed', 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "TAT Failed",
+                "value": get_count({'tatstatus': 'failed', 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            },
+            # {
+            #     "title": "TAT Going to Fail",
+            #     "value": get_count({'expectedDeliveryDate': current_date, 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+            #     "time": "current month",
+            #     "isclickable": False,
+            #     "url": None
+            # },
+            {
+                "title": "LR Delayed",
+                "value": get_count({'delayed': True, 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+                "time": "current month",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
+                "query_param": f"delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
+            }
+        ]
+    }
+    
+    return stats

@@ -1,11 +1,6 @@
-from django.utils import timezone
 from django.db.models import Sum, Q
 from datetime import date, timedelta
 from crm.models import Consignment
-
-def get_current_month_year():
-    now = timezone.now()
-    return now.month, now.year
 
 def get_count(filter_kwargs):
     return Consignment.objects.filter(**filter_kwargs).count()
@@ -19,6 +14,13 @@ def get_current_month_total_weight(start_date, end_date):
         Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
     ).aggregate(total_weight=Sum('weight'))['total_weight'] or 0
 
+def get_current_month_total_consignments(start_date, end_date):
+    return Consignment.objects.filter(
+        Q(lrDate__gte=start_date, lrDate__lte=end_date) |
+        Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
+    ).count()
+    
+
 def get_current_month_counts(status, start_date, end_date):
     return get_count({
         'status': status,
@@ -27,7 +29,6 @@ def get_current_month_counts(status, start_date, end_date):
     })
 
 def generate_dashboard():
-    current_month, current_year = get_current_month_year()
     current_date = date.today()
     start_date = current_date.replace(day=1)
     next_month = start_date + timedelta(days=32)
@@ -89,7 +90,14 @@ def generate_dashboard():
                 "isclickable": True,
                 "url": "consignments?limit=15&offset=0&delayed=true",
                 "query_param": "delayed=true"
-            }
+            },
+            {
+                "title": "Total Consignments",
+                "value": get_count({}),
+                "time": "all time",
+                "isclickable": False,
+                "url": None
+            },
         ],
         
         "current_month": [
@@ -126,7 +134,7 @@ def generate_dashboard():
             },
             {
                 "title": "TAT Passed",
-                "value": get_count({'tatstatus': 'passed', 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+                "value": get_count({'tatstatus': 'passed', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
                 "time": "current month",
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
@@ -134,7 +142,7 @@ def generate_dashboard():
             },
             {
                 "title": "TAT Failed",
-                "value": get_count({'tatstatus': 'failed', 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
+                "value": get_count({'tatstatus': 'failed', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
                 "time": "current month",
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
@@ -154,7 +162,14 @@ def generate_dashboard():
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
                 "query_param": f"delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            }
+            },
+            {
+                "title": "Total Consignments",
+                "value": get_current_month_total_consignments(start_date, end_date),
+                "time": "current month",
+                "isclickable": False,
+                "url": None                
+            },
         ]
     }
     

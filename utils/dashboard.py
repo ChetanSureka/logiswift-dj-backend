@@ -44,13 +44,6 @@ def generate_dashboard():
                 "url": None
             },
             {
-                "title": "Total Consignments",
-                "value": get_count({}),
-                "time": "all time",
-                "isclickable": False,
-                "url": None
-            },
-            {
                 "title": "In Transit",
                 "value": get_count({'status': 'in-transit'}),
                 "time": "all time",
@@ -97,7 +90,14 @@ def generate_dashboard():
                 "isclickable": True,
                 "url": "consignments?limit=15&offset=0&delayed=true",
                 "query_param": "delayed=true"
-            }
+            },
+            {
+                "title": "Total Consignments",
+                "value": get_count({}),
+                "time": "all time",
+                "isclickable": False,
+                "url": None
+            },
         ],
         
         "current_month": [
@@ -107,13 +107,6 @@ def generate_dashboard():
                 "time": "current month",
                 "isclickable": False,
                 "url": None
-            },
-            {
-                "title": "Total Consignments",
-                "value": get_current_month_total_consignments(start_date, end_date),
-                "time": "current month",
-                "isclickable": False,
-                "url": None                
             },
             {
                 "title": "In Transit",
@@ -169,7 +162,14 @@ def generate_dashboard():
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
                 "query_param": f"delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            }
+            },
+            {
+                "title": "Total Consignments",
+                "value": get_current_month_total_consignments(start_date, end_date),
+                "time": "current month",
+                "isclickable": False,
+                "url": None                
+            },
         ]
     }
     

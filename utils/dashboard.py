@@ -123,6 +123,20 @@ def generate_dashboard():
                 "isclickable": False,
                 "url": None
             },
+            {
+                "title": "forward",
+                "value": get_count({'mode': 'forward'}),
+                "time": "all time",
+                "isclickable": False,
+                "url": None                
+            },
+            {
+                "title": "reverse",
+                "value": get_count({'mode': 'reverse'}),
+                "time": "all time",
+                "isclickable": False,
+                "url": None                
+            },
         ],
         
         "month": [

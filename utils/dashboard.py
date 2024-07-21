@@ -9,10 +9,18 @@ def get_total_weight():
     return Consignment.objects.aggregate(total_weight=Sum('weight'))['total_weight'] or 0
 
 def get_current_month_total_weight(start_date, end_date):
-    return Consignment.objects.filter(
-        Q(lrDate__gte=start_date, lrDate__lte=end_date) |
-        Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
+    forward_weight = Consignment.objects.filter(
+        Q(lrDate__gte=start_date, lrDate__lte=end_date),
+        mode='forward'
     ).aggregate(total_weight=Sum('weight'))['total_weight'] or 0
+    
+    reverse_weight = Consignment.objects.filter(
+        Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date) |
+        Q(deliveryDate__isnull=True, lrDate__lte=end_date),
+        mode='reverse'
+    ).aggregate(total_weight=Sum('weight'))['total_weight'] or 0
+    
+    return forward_weight + reverse_weight
 
 def get_current_month_total_consignments(start_date, end_date):
     return Consignment.objects.filter(
@@ -27,6 +35,23 @@ def get_current_month_counts(status, start_date, end_date):
         'lrDate__gte': start_date,
         'lrDate__lte': end_date
     })
+
+def get_past_six_months_weight():
+    current_date = date.today()
+    weights = []
+    
+    for i in range(6):
+        month_start = (current_date.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        next_month = month_start + timedelta(days=32)
+        month_end = next_month.replace(day=1) - timedelta(days=1)
+        total_weight = get_current_month_total_weight(month_start, month_end)
+        weights.append({
+            "month": month_start.strftime("%B"),
+            "weight": total_weight
+        })
+    
+    return weights
+
 
 def generate_dashboard():
     current_date = date.today()
@@ -170,7 +195,24 @@ def generate_dashboard():
                 "isclickable": False,
                 "url": None                
             },
-        ]
+            {
+                "title": "forward",
+                "value": get_count({'mode': 'forward', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
+                "time": "current month",
+                "isclickable": False,
+                "url": None                
+            },
+            {
+                "title": "reverse",
+                "value": get_count({'mode': 'reverse', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
+                "time": "current month",
+                "isclickable": False,
+                "url": None                
+            },
+        ],
+        "graph": {
+            "weight": get_past_six_months_weight()
+        }
     }
     
     return stats

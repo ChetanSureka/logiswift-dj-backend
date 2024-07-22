@@ -26,6 +26,7 @@ class getConsignmentSerializer(serializers.ModelSerializer):
             "consignerName",
             "vendor_id",
             "vendorName",
+            "additionalCharges",
             "expectedDeliveryDate",
             "delayed",
             "delayedReason",

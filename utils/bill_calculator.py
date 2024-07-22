@@ -71,8 +71,16 @@ def calculate_bill(consignment: Consignment):
     consignee = consignment.consignee_id
     consigner = consignment.consigner_id
 
-    rate = 0 if consigner.rate is None else consigner.rate
-    odaCharge = 0 if consigner.odaCharge is None else consigner.odaCharge
+    # rate = 0 if consigner.rate is None else consigner.rate
+    # odaCharge = 0 if consigner.odaCharge is None else consigner.odaCharge
+    
+    if consignment.mode == 'forward':
+        rate = 0 if consignment.consigner_id.rate is None else consignment.consigner_id.rate
+        odaCharge = 0 if consignment.consigner_id.odaCharge is None else consignment.consigner_id.odaCharge
+    else:  # reverse
+        rate = 0 if consignment.consignee_id.rate is None else consignment.consignee_id.rate
+        odaCharge = 0 if consignment.consignee_id.odaCharge is None else consignment.consignee_id.odaCharge
+
     
     rounded_weight = custom_round(weight)
     if rounded_weight <= 15:

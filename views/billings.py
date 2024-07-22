@@ -97,7 +97,7 @@ def bulk_create_bills(request):
                     "additionalCharge": bill.additionalCharge,
                     "totalAmount": bill.totalAmount,
                     "mode": consignment.mode,
-                    "location": consignment.consigner_id.destination
+                    "location": consignment.consigner_id.destination if consignment.mode == 'forward' else consignment.consignee_id.destination
                 })
         
         # write the bill data to excel file

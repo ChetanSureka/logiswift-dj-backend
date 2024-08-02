@@ -1,6 +1,6 @@
-from django.db import models
 import uuid
-
+from datetime import datetime
+from django.db import models
 
 ConsignemntStatusChoices = [
     ["created","created"],
@@ -67,7 +67,7 @@ class VendorDetails(models.Model):
     address = models.CharField(max_length=200, verbose_name="Address", blank=True, null=True)
     vendorType = models.CharField(max_length=100, choices=vendorTypeChoices, verbose_name="Vendor Type")
     email = models.EmailField(max_length=254, verbose_name="Email", blank=True, null=True)
-    phone = models.CharField(default=0, max_length=10, verbose_name="Phone")
+    phone = models.CharField(max_length=10, verbose_name="Phone", null=True)
     pincode = models.CharField(max_length=7, verbose_name="Pincode", blank=True, null=True)
     pin = models.IntegerField(default=0, verbose_name="pin", blank=True, null=True)
     odaCharge = models.IntegerField(default=0, verbose_name="ODA Charge", blank=True, null=True)
@@ -77,10 +77,17 @@ class VendorDetails(models.Model):
     createdBy = models.CharField(max_length=100, verbose_name="Created By", blank=True, null=True)
     modifiedDate = models.DateTimeField(auto_now=True, verbose_name="Modified Date")
     modifiedBy = models.CharField(max_length=100, verbose_name="Modified By", blank=True, null=True)
-    deletedOn = models.DateTimeField(auto_now=True, verbose_name="Deleted On")
+
+    deleted = models.BooleanField(default=False)
+    deletedOn = models.DateTimeField(verbose_name="Deleted On", null=True)
 
     def __str__(self):
         return f"{self.name}"
+    
+    def soft_delete(self):
+        self.deleted = True
+        self.deletedOn = datetime.now()
+        return self.save()
     
     # class Meta:
     #     verbose_name = "Vendor"

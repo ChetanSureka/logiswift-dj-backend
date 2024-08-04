@@ -29,6 +29,8 @@ def getChannelPartners(request):
             except ValueError:
                 pass
 
+        total_results = queryset.count()
+
         if offset:
             offset = int(offset)
             queryset = queryset[offset:]
@@ -38,8 +40,6 @@ def getChannelPartners(request):
         if limit:
             limit = int(limit)
             queryset = queryset[:limit]
-
-        total_results = queryset.count()
 
         serializer = ChannelPartnerSerializer(queryset, many=True)
         data = serializer.data

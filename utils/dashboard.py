@@ -50,7 +50,7 @@ def get_past_six_months_weight():
             "weight": total_weight
         })
     
-    return weights
+    return weights[::-1]
 
 
 def generate_dashboard():

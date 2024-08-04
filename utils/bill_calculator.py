@@ -89,10 +89,10 @@ def calculate_bill(consignment: Consignment):
         chargable_weight = rounded_weight
         
     
-    amount = (chargable_weight * rate) + odaCharge
+    amount = (chargable_weight * rate)
     if additionalCharges is None:
         additionalCharges = 0
-    total_amount = amount + additionalCharges
+    total_amount = amount + additionalCharges + odaCharge
     
     
     

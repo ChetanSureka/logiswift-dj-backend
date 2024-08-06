@@ -11,12 +11,13 @@ class DistributorSerializer(serializers.ModelSerializer):
             "name",
             "address",
             "destination",
-            
-            "locationMappingId",
+
             "state",
             "email",
             "phone",
-            
+
+            "vendor_id",
+
             "tat",
             "rate",
             "odaCharge",

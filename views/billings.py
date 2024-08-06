@@ -12,8 +12,12 @@ import tempfile
 from django.http.response import FileResponse
 
 def update_consignment(consignment: Consignment):
+    # fetch consignee tat
     try:
-        tat = consignment.consigner_id.tat
+        if consignment.mode == "reverse":
+            tat = consignment.consignee_id.tat+1
+        else:
+            tat = consignment.consigner_id.tat
         if tat is None:
             tat = 0
     except Exception as e:

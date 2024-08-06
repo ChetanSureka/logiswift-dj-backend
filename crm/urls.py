@@ -17,6 +17,7 @@ urlpatterns = [
 
 
     path("vendors/", getColoaders),
+    path("consignments/generate/mis/", getMis),
     
     path("dashboard/", getDashboard),
 ]

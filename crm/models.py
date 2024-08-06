@@ -29,12 +29,12 @@ ConsignmentModeChoices = [
 #     email = models.EmailField(max_length=254)
 #     phone = models.CharField(default=0, max_length=10)
 #     pin = models.IntegerField(default=0)
-#     createdDate = models.DateTimeField(auto_now_add=True)
+#     createdDate = models.DateField(auto_now_add=True)
 #     createdBy = models.IntegerField()
-#     modifiedDate = models.DateTimeField(auto_now=True)
+#     modifiedDate = models.DateField(auto_now=True)
 #     modifiededBy = models.IntegerField()
-#     deletedOn = models.DateTimeField(auto_now=True)
-#     last_login = models.DateTimeField(auto_now=True)
+#     deletedOn = models.DateField(auto_now=True)
+#     last_login = models.DateField(auto_now=True)
 
 #     def __str__(self):
 #         return f"{self.name} - {self.phone}"
@@ -52,8 +52,8 @@ class Location(models.Model):
     location = models.CharField(max_length=100)
     sublocation = models.CharField(max_length=100, blank=True, null=True)
 
-    createdDate = models.DateTimeField(auto_now_add=True)
-    modifiedDate = models.DateTimeField(auto_now=True, null=True, blank=True)
+    createdDate = models.DateField(auto_now_add=True)
+    modifiedDate = models.DateField(auto_now=True, null=True, blank=True)
 
     # Add mappings to a state and pincode model
 
@@ -81,37 +81,24 @@ class VendorDetails(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, verbose_name="Vendor Name")
-    address = models.CharField(
-        max_length=200, verbose_name="Address", blank=True, null=True)
+    address = models.CharField(max_length=200, verbose_name="Address", blank=True, null=True)
 
-    location_id = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True,
-                                    related_name="channel_partners", verbose_name="Location")
-    vendorType = models.CharField(
-        max_length=100, choices=vendorTypeChoices, verbose_name="Vendor Type")
-    email = models.EmailField(
-        max_length=254, verbose_name="Email", blank=True, null=True)
+    location_id = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name="channel_partners", verbose_name="Location")
+    vendorType = models.CharField(max_length=100, choices=vendorTypeChoices, verbose_name="Vendor Type")
+    email = models.EmailField(max_length=254, verbose_name="Email", blank=True, null=True)
     phone = models.CharField(max_length=10, verbose_name="Phone", null=True)
-    pincode = models.CharField(
-        max_length=7, verbose_name="Pincode", blank=True, null=True)
-    pin = models.IntegerField(
-        default=0, verbose_name="pin", blank=True, null=True)
-    odaCharge = models.IntegerField(
-        default=0, verbose_name="ODA Charge", blank=True, null=True)
-    fixedCharge = models.IntegerField(
-        default=0, verbose_name="Fixed Charge", blank=True, null=True)
-    miscCharge = models.IntegerField(
-        default=0, verbose_name="Misc Charge", blank=True, null=True)
-    createdDate = models.DateTimeField(
-        auto_now_add=True, verbose_name="Created Date")
-    createdBy = models.CharField(
-        max_length=100, verbose_name="Created By", blank=True, null=True)
-    modifiedDate = models.DateTimeField(
-        auto_now=True, verbose_name="Modified Date")
-    modifiedBy = models.CharField(
-        max_length=100, verbose_name="Modified By", blank=True, null=True)
+    pincode = models.CharField(max_length=7, verbose_name="Pincode", blank=True, null=True)
+    pin = models.IntegerField(default=0, verbose_name="pin", blank=True, null=True)
+    odaCharge = models.IntegerField(default=0, verbose_name="ODA Charge", blank=True, null=True)
+    fixedCharge = models.IntegerField(default=0, verbose_name="Fixed Charge", blank=True, null=True)
+    miscCharge = models.IntegerField(default=0, verbose_name="Misc Charge", blank=True, null=True)
+    createdDate = models.DateField(auto_now_add=True, verbose_name="Created Date")
+    createdBy = models.CharField(max_length=100, verbose_name="Created By", blank=True, null=True)
+    modifiedDate = models.DateField(auto_now=True, verbose_name="Modified Date")
+    modifiedBy = models.CharField(max_length=100, verbose_name="Modified By", blank=True, null=True)
 
     deleted = models.BooleanField(default=False)
-    deletedOn = models.DateTimeField(verbose_name="Deleted On", null=True)
+    deletedOn = models.DateField(verbose_name="Deleted On", null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -136,10 +123,10 @@ class VendorDetails(models.Model):
 #     location = models.ForeignKey(
 #         "Location", on_delete=models.CASCADE, related_name="vendorLocation")
 
-#     createdDate = models.DateTimeField(auto_now_add=True)
+#     createdDate = models.DateField(auto_now_add=True)
 #     createdBy = models.CharField(
 #         max_length=100, null=True, blank=True, default="System")
-#     modifiedDate = models.DateTimeField(auto_now=True)
+#     modifiedDate = models.DateField(auto_now=True)
 #     modifiedBy = models.CharField(
 #         max_length=100, null=True, blank=True, default="System")
 
@@ -162,11 +149,11 @@ class Users(models.Model):
     phone = models.CharField(default=0, max_length=10)
     pincode = models.CharField(max_length=7)
     pin = models.IntegerField(default=0)
-    createdDate = models.DateTimeField(auto_now_add=True)
+    createdDate = models.DateField(auto_now_add=True)
     createdBy = models.CharField(max_length=100)
-    modifiedDate = models.DateTimeField(auto_now=True)
+    modifiedDate = models.DateField(auto_now=True)
     modifiedBy = models.CharField(max_length=100)
-    deletedOn = models.DateTimeField(auto_now=True)
+    deletedOn = models.DateField(auto_now=True)
 
     def __str__(self):
         return f"{self.name} - {self.pincode}"
@@ -199,9 +186,9 @@ Create a Sub-Location mapping Model
 #                                      ], default="Normal")
 #     enabled = models.BooleanField(default=True)
 #     # tat = models.IntegerField(blank=True, null=True, default=None)
-#     createdDate = models.DateTimeField(auto_now_add=True)
+#     createdDate = models.DateField(auto_now_add=True)
 #     createdBy = models.CharField(max_length=100, null=True, blank=True)
-#     modifiedDate = models.DateTimeField(auto_now=True, null=True, blank=True)
+#     modifiedDate = models.DateField(auto_now=True, null=True, blank=True)
 #     modifiedBy = models.CharField(max_length=100, null=True, blank=True)
 
 #     def __str__(self):
@@ -254,15 +241,15 @@ class ConsigneeConsigner(models.Model):
                                   related_name="distributors", verbose_name="Channel Partner")
     deleted = models.BooleanField(default=False)
 
-    createdDate = models.DateTimeField(
+    createdDate = models.DateField(
         auto_now_add=True, verbose_name="Created Date")
     createdBy = models.CharField(
         max_length=100, default=0, verbose_name="Created By")
-    modifiedDate = models.DateTimeField(
+    modifiedDate = models.DateField(
         auto_now=True, blank=True, null=True, verbose_name="Modified Date")
     modifiedBy = models.CharField(
         max_length=100, default=0, verbose_name="Modified By")
-    deletedOn = models.DateTimeField(
+    deletedOn = models.DateField(
         auto_now=True, blank=True, null=True, verbose_name="Deleted On")
 
     def __str__(self):
@@ -333,10 +320,10 @@ class Consignment(models.Model):
     createdBy = models.CharField(max_length=100, verbose_name="Created By")
     deliveryDate = models.DateField(
         verbose_name="Delivery Date", null=True, blank=True, default=None)
-    modifiedDate = models.DateTimeField(
+    modifiedDate = models.DateField(
         auto_now=True, verbose_name="Modified Date")
     modifiedBy = models.CharField(max_length=100, verbose_name="Modified By")
-    deletedOn = models.DateTimeField(auto_now=True, verbose_name="Deleted On")
+    deletedOn = models.DateField(auto_now=True, verbose_name="Deleted On")
 
     def __str__(self):
         return f"{self.lr}"
@@ -352,8 +339,8 @@ class PublicHolidays(models.Model):
     date = models.DateField()
     description = models.TextField(blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
 
     def __str__(self):
         return self.description
@@ -416,8 +403,8 @@ class Billings(models.Model):
     officeExpense = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True, default=0)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
     created_by = models.CharField(
         max_length=255, null=True, blank=True, default=None)
     updated_by = models.CharField(

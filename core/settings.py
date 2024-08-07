@@ -10,7 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import os, json
+import os
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -101,6 +102,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://www.logiswift.in",
     "https://webapp-1175801.pythonanywhere.com",
+    "http://localhost:4173"
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True
@@ -127,9 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
 

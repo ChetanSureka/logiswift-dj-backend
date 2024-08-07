@@ -4,6 +4,7 @@ from views.coloaders import *
 from views.dashboard import getDashboard
 from urls.distributors import urlpatterns as distributor_urlpatterns
 from urls.billings import urlpatterns as billing_urlpatterns
+from urls.channel_partners import urlpatterns as channel_partner_urlpatterns
 
 urlpatterns = [
     # path("consignments/", getConsignments),
@@ -17,9 +18,11 @@ urlpatterns = [
 
 
     path("vendors/", getColoaders),
+    path("consignments/generate/mis/", getMis),
     
     path("dashboard/", getDashboard),
 ]
 
 urlpatterns += distributor_urlpatterns
 urlpatterns += billing_urlpatterns
+urlpatterns += channel_partner_urlpatterns

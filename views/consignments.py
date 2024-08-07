@@ -1,5 +1,5 @@
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
 from crm.models import Consignment, ConsigneeConsigner
@@ -8,6 +8,8 @@ from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
 from utils.edd import calculate_expected_delivery
 from utils.bill_calculator import calculate_bill
+from utils.mis_report import generate_mis_report
+from django.http.response import FileResponse
 
 @api_view(["GET"])
 def getConsignments(request):
@@ -289,7 +291,10 @@ def updateConsignment(request, lr):
         
         # fetch consignee tat
         try:
-            tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
+            if consignment.mode == "reverse":
+                tat = ConsigneeConsigner.objects.get(id=req_data['consignee_id']).tat
+            else:
+                tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
             if tat is None:
                 tat = 0
         except Exception as e:
@@ -364,4 +369,26 @@ def getStatusCount(request):
         print("[ERROR] failed to get status count: ", e)
         return HttpResponse.Failed("Failed to get status count", error=e)
 
+
+@api_view(["GET"])
+def getMis(request):
+    '''
+    Generates an excel MIS report
+    '''
+    today = datetime.now().date()
     
+    fromDate = request.GET.get('fromDate', None)
+    toDate = request.GET.get('toDate', None)
+    
+    if fromDate is None and toDate is None:
+        fromDate = today.replace(day=1).strftime('%Y-%m-%d')
+        toDate = today.strftime('%Y-%m-%d')
+    
+    try:
+        report_file = generate_mis_report(fromDate, toDate)
+        response = FileResponse(open(report_file, 'rb'), as_attachment=True, filename=report_file)
+        
+        return response
+    except Exception as e:
+        print("Error generating mis report: ", e)
+        return HttpResponse.Failed(message="Error generating mis report")

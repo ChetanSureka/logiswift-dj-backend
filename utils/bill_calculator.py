@@ -66,7 +66,10 @@ def custom_round(x):
 
 def calculate_bill(consignment: Consignment):
     weight = consignment.weight
-    additionalCharges = 0 if consignment.additionalCharges is None or 1 else consignment.additionalCharges
+    if consignment.additionalCharges == 1 or consignment.additionalCharges is None:
+        additionalCharges = 0
+    else:
+        additionalCharges = consignment.additionalCharges
 
     consignee = consignment.consignee_id
     consigner = consignment.consigner_id
@@ -89,10 +92,10 @@ def calculate_bill(consignment: Consignment):
         chargable_weight = rounded_weight
         
     
-    amount = (chargable_weight * rate) + odaCharge
+    amount = (chargable_weight * rate)
     if additionalCharges is None:
         additionalCharges = 0
-    total_amount = amount + additionalCharges
+    total_amount = amount + additionalCharges + odaCharge
     
     
     

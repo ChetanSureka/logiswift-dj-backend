@@ -1,22 +1,19 @@
 from io import BytesIO
-from django.db.models import Q
-from crm.models import Consignment
-from helpers.response import HttpResponse
-from rest_framework.decorators import api_view
 from datetime import datetime, timedelta
+from django.db.models import Q
+from django.http import FileResponse
+from rest_framework.decorators import api_view
+from crm.models import Consignment
 from utils.bill_calculator import calculate_bill
-from core.settings import BASE_DIR
 from utils.edd import calculate_expected_delivery
 from serializers.consignments import ConsignmentSerializer
 import pandas as pd
-import tempfile
-from django.http.response import FileResponse
+from helpers.response import HttpResponse
 
 def update_consignment(consignment: Consignment):
-    # fetch consignee tat
     try:
         if consignment.mode == "reverse":
-            tat = consignment.consignee_id.tat+1
+            tat = consignment.consignee_id.tat + 1
         else:
             tat = consignment.consigner_id.tat
         if tat is None:
@@ -24,20 +21,18 @@ def update_consignment(consignment: Consignment):
     except Exception as e:
         print("Error fetching consignee tat: \n", e)
     
-    req_data = {}
-    req_data["expectedDeliveryDate"] = calculate_expected_delivery(str(consignment.lrDate), tat)
-    req_data["deliveryDate"] = consignment.deliveryDate
+    req_data = {
+        "expectedDeliveryDate": calculate_expected_delivery(str(consignment.lrDate), tat),
+        "deliveryDate": consignment.deliveryDate
+    }
     
     serializer = ConsignmentSerializer(consignment, data=req_data, partial=True)
     if serializer.is_valid():
         deliveryDate = serializer.validated_data.get("deliveryDate", None)
         expectedDeliveryDate = serializer.validated_data.get("expectedDeliveryDate", None)
         
-    
         if deliveryDate and expectedDeliveryDate:
-            deliveryDate = deliveryDate
             expectedDeliveryDate = datetime.strptime(str(expectedDeliveryDate), '%Y-%m-%d').date()
-            
             variance = (deliveryDate - expectedDeliveryDate).days
             tatStatus = "passed" if deliveryDate <= expectedDeliveryDate else "failed"
             
@@ -51,8 +46,6 @@ def update_consignment(consignment: Consignment):
         return bill
     else:
         return None
-
-
 
 @api_view(["POST", "GET"])
 def bulk_create_bills(request):
@@ -90,30 +83,29 @@ def bulk_create_bills(request):
         if consignments:
             for consignment in consignments:
                 bill = update_consignment(consignment)
-                bills.append({
-                    "lr": int(consignment.lr),
-                    "lrDate": consignment.lrDate.strftime("%d-%b-%y"),
-                    "sender": bill.consigneeName,
-                    "reciever": bill.consignerName,
-                    "actual_weight": float(consignment.weight),
-                    "quantity": int(bill.quantity),
-                    "chargable_weight": int(bill.chargeableWeight),
-                    "rate": int(bill.rate),
-                    "amount": int(bill.amount),
-                    "odaCharge": int(bill.odaCharge),
-                    "additionalCharge": float(bill.additionalCharge),
-                    "totalAmount": float(bill.totalAmount),
-                    "mode": consignment.mode,
-                    "location": consignment.consigner_id.destination if consignment.mode == 'forward' else consignment.consignee_id.destination
-                })
+                if bill:
+                    bills.append({
+                        "lr": int(consignment.lr),
+                        "lrDate": consignment.lrDate.strftime("%d-%b-%y"),
+                        "sender": bill.consigneeName,
+                        "reciever": bill.consignerName,
+                        "actual_weight": float(consignment.weight),
+                        "quantity": int(bill.quantity),
+                        "chargable_weight": int(bill.chargeableWeight),
+                        "rate": int(bill.rate),
+                        "amount": int(bill.amount),
+                        "odaCharge": int(bill.odaCharge),
+                        "additionalCharge": float(bill.additionalCharge),
+                        "totalAmount": float(bill.totalAmount),
+                        "mode": consignment.mode,
+                        "location": consignment.consigner_id.destination if consignment.mode == 'forward' else consignment.consignee_id.destination
+                    })
         
-        # write the bill data to excel file
-        if bills:
-            df = pd.DataFrame(bills)
-        else:
+        if not bills:
             return HttpResponse.Ok(message="No consignments are delivered for the current month.")
         
-        # Convert the DataFrame to an Excel file in memory
+        df = pd.DataFrame(bills)
+        
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df_forward = df[df["mode"].str.lower() == 'forward']
@@ -122,31 +114,13 @@ def bulk_create_bills(request):
             df_forward.to_excel(writer, index=False, sheet_name='Forward')
             df_reverse.to_excel(writer, index=False, sheet_name='Reverse')
             
-        # Seek to the beginning of the stream
         output.seek(0)
 
-        # Create a FileResponse
         response = FileResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, filename=f"bill_{fromDate.date()}-{toDate.date()}.xlsx")
         response['Content-Disposition'] = f'attachment; filename=bill_{fromDate.date()}-{toDate.date()}.xlsx'
 
         return response
     
-    
-        # data = {
-        #     "total_bills": len(bills),
-        #     "total_delivered": consignments.count(),
-        #     "fromDate": fromDate,
-        #     "toDate": toDate,
-        #     "excel_file": filepath,
-        #     "bills": bills
-        # }
-        
-        # return HttpResponse.Ok(data, message="Bills created successfully")
-    
     except Exception as e:
         print("Error creating bulk bills: ", e)
         return HttpResponse.BadRequest(message="Error creating bills")
-
-
-
- 

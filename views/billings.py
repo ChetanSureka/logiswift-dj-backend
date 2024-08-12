@@ -1,5 +1,5 @@
-from django.db.models import Q
-from crm.models import Consignment
+from django.db.models import Q, F, Case, When, Value, IntegerField
+from crm.models import Consignment, Billings
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
 from datetime import datetime, timedelta
@@ -7,6 +7,7 @@ from utils.bill_calculator import calculate_bill
 from core.settings import BASE_DIR
 from utils.edd import calculate_expected_delivery
 from serializers.consignments import ConsignmentSerializer
+from serializers.billings import GetBillingsSerializer
 import pandas as pd
 import tempfile
 from django.http.response import FileResponse
@@ -143,6 +144,126 @@ def bulk_create_bills(request):
         print("Error creating bulk bills: ", e)
         return HttpResponse.BadRequest(message="Error creating bills")
 
+@api_view(["GET"])
+def get_filtered_bills(request):
+    '''
+    filter by date
+    filter by tatStatus
+    
+    search by lr
+    '''
+    limit = request.query_params.get('limit')
+    offset = request.query_params.get('offset')
+    search = request.query_params.get('search')
+    tatstatus = request.query_params.get('tatstatus')
+    from_date = request.query_params.get('fromDate')
+    to_date = request.query_params.get('toDate')
+    
+    
+    queryset = Billings.objects.all()
+    
+    try:
+        if tatstatus:
+            queryset = queryset.filter(tatstatus=tatstatus)
+        
+        if search:
+            queryset = queryset.filter(
+                Q(consignment__lr__iexact=search) | 
+                Q(consignment__lr__startswith=search) | 
+                Q(consignment__lr__icontains=search)
+            ).annotate(
+                search_order=Case(
+                    When(consignment__lr__iexact=search, then=Value(0)),
+                    When(consignment__lr__startswith=search, then=Value(1)),
+                    When(consignment__lr__icontains=search, then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                )
+            ).order_by('search_order', 'consignment__lr')
+            # queryset = queryset.filter(
+            #     Q(lr__icontains=search)
+            # ).order_by('lr__lr')
+
+        
+        if from_date:
+            queryset = queryset.filter(consignment__lrDate__gte=from_date)
+        
+        if to_date:
+            queryset = queryset.filter(consignment__lrDate__lte=to_date)
+        
+        queryset = queryset.order_by('-consignment__lrDate')
+        total_results = len(queryset)
+        
+        if limit or offset:
+            limit = int(limit)
+            offset = int(offset)
+            queryset = queryset[offset: offset+limit]
+        
+        serializer = GetBillingsSerializer(queryset, many=True)
+        data = serializer.data
+        response_data = {
+            "limit": limit,
+            "offset": offset,
+            "results_count": len(data),
+            "total_results": total_results,
+            "results": data,
+        }
+        
+        return HttpResponse.Ok(data=response_data, message="Filtered bills fetched successfully")
+    
+    except Exception as e:
+        print("[ERROR] Failed to filter bills: ", e)
+        return HttpResponse.Failed()
 
 
- 
+@api_view(["DELETE"])
+def delete_bills(request, id):
+    '''
+    delete bills by lr
+    '''
+    try:
+        billings = Billings.objects.filter(id=id)
+        
+        if not billings.exists():
+            return HttpResponse.NotFound(message="No billings found for the provided id")
+
+        count, _ = billings.delete()
+
+        return HttpResponse.Ok(data={"deleted_count": count}, message=f"Successfully deleted {count} billing(s) with id {id}")
+    
+    except Exception as e:
+        print("[ERROR] Failed to delete bills by id:", e)
+        return HttpResponse.Failed(message="Failed to delete bills by id")
+
+
+@api_view(["PUT", "PATCH"])
+def update_bill(request, id):
+    try:
+        bill = Billings.objects.get(id=id)
+        serializer = GetBillingsSerializer(bill, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return HttpResponse.Ok(data=serializer.data, message="Bill updated successfully")
+        else:
+            return HttpResponse.BadRequest(data=serializer.errors, message="Invalid data")
+    
+    except Billings.DoesNotExist:
+        return HttpResponse.BadRequest(message="Bill not found")
+
+    except Exception as e:
+        print("[ERROR] Failed to update bill: ", e)
+        return HttpResponse.Failed(message="Failed to update bill")
+
+
+@api_view(["GET"])
+def get_bill_by_id(request, id):
+    try:
+        bill = Billings.objects.get(id=id)
+        serializer = GetBillingsSerializer(bill)
+        return HttpResponse.Ok(data=serializer.data, message="Bill retrieved successfully")
+    except Billings.DoesNotExist:
+        return HttpResponse.BadRequest(message="Bill not found")
+    except Exception as e:
+        print("[ERROR] Failed to retrieve Bill: ", e)
+        return HttpResponse.Failed(message="Failed to retrieve Bill")

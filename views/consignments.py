@@ -384,8 +384,12 @@ def getMis(request):
         fromDate = today.replace(day=1).strftime('%Y-%m-%d')
         toDate = today.strftime('%Y-%m-%d')
     
+    fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
+    toDate = datetime.strptime(toDate, "%Y-%m-%d")
+    
     try:
-        report_file = generate_mis_report(fromDate, toDate)
+        # report_file = generate_mis_report(fromDate, toDate)
+        report_file = generate_mis_report(today)
         response = FileResponse(open(report_file, 'rb'), as_attachment=True, filename=report_file)
         
         return response

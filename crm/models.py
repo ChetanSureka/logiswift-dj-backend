@@ -353,7 +353,7 @@ class PublicHolidays(models.Model):
 class Billings(models.Model):
     id = models.AutoField(primary_key=True)
 
-    lr = models.ForeignKey(
+    consignment = models.ForeignKey(
         Consignment, on_delete=models.CASCADE, related_name="consignment_billings")
 
     tatstatus = models.CharField(max_length=10, blank=True, null=True, choices=[

@@ -4,41 +4,28 @@ import pandas as pd
 import os, zipfile
 from datetime import datetime, timedelta
 
-def get_details(consignment: Consignment) -> dict:
-    '''
-        Sl no
-        lr date
-        distributor name
-        address
-        sub - location
-        location
-        weight
-        qty
-        status
-        delivery date (empty)
-        vaiance + tat (tat taken)
-        tat status (pass / failed) => (hit/miss)
-        location type (ODA / Normal)
-        remarks
-    '''
-    
-    if (consignment.mode).lower() == "forward":
+
+def get_details(consignment: Consignment, sl: int) -> dict:
+    """
+    Returns a dictionary with consignment details for the MIS report.
+    """
+    if consignment.mode.lower() == "forward":
         distributor = consignment.consigner_id
         tat = distributor.tat
-    elif (consignment.mode).lower() == "reverse":
+    else:  # mode == "reverse"
         distributor = consignment.consignee_id
         tat = distributor.tat + 1
-    
-    tat_taken = consignment.variance + tat if consignment.variance else None
-    
-    
-    details = {
-        "sl_no": 0,
+
+    # Ensure tat and variance are not None before calculating tat_taken
+    tat_taken = None
+    if tat is not None and consignment.variance is not None:
+        tat_taken = tat - consignment.variance
+
+    return {
+        "sl_no": sl,
         "lrDate": consignment.lrDate,
         "distributor": distributor.name,
         "address": distributor.address,
-        # "sub_location": distributor.locationMappingId.sublocation,
-        # "location": distributor.locationMappingId.location,
         "weight": consignment.weight,
         "quantity": consignment.quantity,
         "status": consignment.status,
@@ -46,113 +33,114 @@ def get_details(consignment: Consignment) -> dict:
         "tat_taken": tat_taken,
         "tat_status": consignment.tatstatus,
         "remarks": consignment.remarks,
-        # "location_type": distributor.location_type,
     }
-    
-    return details
 
-def get_previous_month(date):
-    previous_month = date.month - 1
-    previous_year = date.year
+
+def get_previous_month_date(current_date: datetime) -> datetime:
+    """
+    Returns the first date of the previous month given a current date.
+    """
+    previous_month = current_date.month - 1
+    previous_year = current_date.year
     if previous_month == 0:
         previous_month = 12
         previous_year -= 1
     return datetime(previous_year, previous_month, 1)
 
 
-
-def generate_mis_report(fromDate, toDate):
-    '''
-    Filter consignments for the given date ranges.
-    and pass the filtered results to the above function.
-    get the list of details and add them to the pandas data frame to create an excel report.
-    
-    conditions to filter consignments:
-    - get all consignments
-    - if there are consignments from the previous month create a seperate excel file don't include them in the current month mis
-    - in seperate excel make sure that all the consignments from the previous month are included.
-    - forward_consignments = Consignment.objects.filter(
-            Q(lrDate__gte=fromDate, lrDate__lte=toDate),
-            mode='forward'
-        ).order_by('lrDate')
-
-    - reverse_consignments = Consignment.objects.filter(
-            Q(deliveryDate__gte=fromDate, deliveryDate__lte=toDate) |
-            Q(deliveryDate__isnull=True, lrDate__lte=toDate),
-            mode='reverse'
-        ).order_by('lrDate')
-        
-    - consignments = forward_consignments | reverse_consignments
-    '''
-    # Filter forward consignments
-    forward_consignments = Consignment.objects.filter(
-        Q(lrDate__gte=fromDate, lrDate__lte=toDate),
-        mode='forward'
+def filter_consignments(date_from: datetime, date_to: datetime, mode: str) -> list:
+    """
+    Filters consignments based on date range and mode.
+    """
+    return Consignment.objects.filter(
+        Q(lrDate__gte=date_from, lrDate__lte=date_to),
+        mode=mode
     ).order_by('lrDate')
 
-    # Filter reverse consignments
-    reverse_consignments = Consignment.objects.filter(
-        Q(deliveryDate__gte=fromDate, deliveryDate__lte=toDate) |
-        Q(deliveryDate__isnull=True, lrDate__lte=toDate),
-        mode='reverse'
-    ).order_by('lrDate')
 
-    # Combine consignments
-    consignments = forward_consignments | reverse_consignments
-
-    # Initialize data lists
-    current_month_forward = []
-    current_month_reverse = []
-    previous_month_forward = []
-    previous_month_reverse = []
-
-    # Process each consignment
-    for consignment in consignments:
-        details = get_details(consignment)
-        if consignment.lrDate.month == fromDate.strptime().month:
-            if consignment.mode.lower() == "forward":
-                current_month_forward.append(details)
-            else:
-                current_month_reverse.append(details)
-        else:
-            if consignment.mode.lower() == "forward":
-                previous_month_forward.append(details)
-            else:
-                previous_month_reverse.append(details)
-    
-    # Create DataFrames
-    current_month_forward_df = pd.DataFrame(current_month_forward)
-    current_month_reverse_df = pd.DataFrame(current_month_reverse)
-    previous_month_forward_df = pd.DataFrame(previous_month_forward)
-    previous_month_reverse_df = pd.DataFrame(previous_month_reverse)
-    
-    # Create file names
-    current_month_name = fromDate.strftime("%b_%Y")
-    previous_month_date = get_previous_month(fromDate)
-    previous_month_name = previous_month_date.strftime("%b_%Y")
-    
-    current_file = f'MIS_{current_month_name}.xlsx'
-    previous_file = f'MIS_{previous_month_name}.xlsx'
+def filter_undelivered_consignments(consignments):
+    """
+    Filters out consignments with a status other than 'delivered'.
+    """
+    return consignments.exclude(status='delivered')
 
 
-    with pd.ExcelWriter(current_file) as writer:
-        current_month_forward_df.to_excel(writer, sheet_name='Forward', index=False)
-        current_month_reverse_df.to_excel(writer, sheet_name='Reverse', index=False)
+def generate_excel(dataframes: dict, filename: str):
+    """
+    Generates an Excel file from given dataframes and saves it with the provided filename.
+    """
+    with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
+        for sheet_name, df in dataframes.items():
+            if not df.empty:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                # Get the xlsxwriter worksheet object
+                worksheet = writer.sheets[sheet_name]
+                
+                # Auto-fit column widths
+                for i, col in enumerate(df.columns):
+                    column_len = df[col].astype(str).str.len().max()
+                    # Considering the column header length as well
+                    header_len = len(col)
+                    # Set the column width
+                    worksheet.set_column(i, i, max(column_len, header_len) + 2)
 
-    if not previous_month_forward_df.empty or not previous_month_reverse_df.empty:
-        with pd.ExcelWriter(previous_file) as writer:
-            previous_month_forward_df.to_excel(writer, sheet_name='Forward', index=False)
-            previous_month_reverse_df.to_excel(writer, sheet_name='Reverse', index=False)
-        
-        # Create a zip file
-        with zipfile.ZipFile('MIS_Report.zip', 'w') as zipf:
-            zipf.write(current_file)
-            zipf.write(previous_file)
-        
-        # Remove the individual files after zipping
-        os.remove(current_file)
-        os.remove(previous_file)
-        return 'MIS_Report.zip'
-      
-    os.remove(current_file)
-    return current_file
+
+def generate_mis_report(current_date: datetime):
+    """
+    Generates MIS report based on the current and previous month consignments.
+    """
+    # Define date ranges
+    first_day_current_month = current_date.replace(day=1)
+    first_day_previous_month = get_previous_month_date(current_date)
+    last_day_previous_month = first_day_current_month - timedelta(days=1)
+
+    # Filter current month's consignments
+    current_forward = filter_consignments(first_day_current_month, current_date, 'forward')
+    current_reverse = filter_consignments(first_day_current_month, current_date, 'reverse')
+
+    # Prepare data for current month
+    current_month_forward_data = [get_details(consignment, sl) for sl, consignment in enumerate(current_forward, start=1)]
+    current_month_reverse_data = [get_details(consignment, sl) for sl, consignment in enumerate(current_reverse, start=1)]
+
+    current_month_dfs = {
+        'Forward': pd.DataFrame(current_month_forward_data),
+        'Reverse': pd.DataFrame(current_month_reverse_data),
+    }
+
+    # Generate current month's Excel report
+    current_month_filename = f'MIS_{current_date.strftime("%b_%Y")}.xlsx'
+    generate_excel(current_month_dfs, current_month_filename)
+
+    # Check for undelivered consignments in the previous month
+    previous_forward = filter_consignments(first_day_previous_month, last_day_previous_month, 'forward')
+    previous_reverse = filter_consignments(first_day_previous_month, last_day_previous_month, 'reverse')
+
+    undelivered_previous_forward = filter_undelivered_consignments(previous_forward)
+    undelivered_previous_reverse = filter_undelivered_consignments(previous_reverse)
+
+    if undelivered_previous_forward.exists() or undelivered_previous_reverse.exists():
+        previous_month_forward_data = [get_details(consignment) for consignment in previous_forward]
+        previous_month_reverse_data = [get_details(consignment) for consignment in previous_reverse]
+
+        previous_month_dfs = {
+            'Forward': pd.DataFrame(previous_month_forward_data),
+            'Reverse': pd.DataFrame(previous_month_reverse_data),
+        }
+
+        previous_month_filename = f'MIS_{first_day_previous_month.strftime("%b_%Y")}.xlsx'
+        generate_excel(previous_month_dfs, previous_month_filename)
+
+        # Zip files together
+        zip_filename = 'MIS_Report.zip'
+        with zipfile.ZipFile(zip_filename, 'w') as zipf:
+            zipf.write(current_month_filename)
+            zipf.write(previous_month_filename)
+
+        # Clean up individual files
+        os.remove(current_month_filename)
+        os.remove(previous_month_filename)
+
+        return zip_filename
+
+    return current_month_filename

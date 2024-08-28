@@ -1,3 +1,4 @@
+from io import BytesIO
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from crm.models import Consignment, Billings
 from helpers.response import HttpResponse

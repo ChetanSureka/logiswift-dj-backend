@@ -1,0 +1,1 @@
+import{j as r}from"./index-D3MpGbMR.js";import{C as t}from"./index-DKbpReJy.js";import"./index-DXqQCM1T.js";import"./textarea-jcf1xEN7.js";import"./label-6xY-HwOp.js";import"./index-z4fhoOdL.js";import"./delete-modal-D66pdwQ4.js";import"./alert-dialog-CM4UmgTj.js";import"./square-check-big-BWZHRSR5.js";const d=({})=>r.jsx(t,{});export{d as default};

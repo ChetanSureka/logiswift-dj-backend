@@ -23,15 +23,17 @@ def get_details(consignment: Consignment, sl: int) -> dict:
 
     return {
         "sl_no": sl,
+        "lr": consignment.lr,
         "lrDate": consignment.lrDate,
-        "distributor": distributor.name,
-        "address": distributor.address,
+        "distributor": str(distributor.name).title(),
+        "address": str(distributor.address).title(),
+        "location": str(distributor.destination).title(),
         "weight": consignment.weight,
         "quantity": consignment.quantity,
-        "status": consignment.status,
+        "status": str(consignment.status).title(),
         "deliveryDate": consignment.deliveryDate,
         "tat_taken": tat_taken,
-        "tat_status": consignment.tatstatus,
+        "tat_status": str(consignment.tatstatus).title(),
         "remarks": consignment.remarks,
     }
 
@@ -109,7 +111,7 @@ def generate_mis_report(current_date: datetime):
     }
 
     # Generate current month's Excel report
-    current_month_filename = f'MIS_{current_date.strftime("%b_%Y")}.xlsx'
+    current_month_filename = f'MIS_{current_date.strftime("%d_%b_%Y")}.xlsx'
     generate_excel(current_month_dfs, current_month_filename)
 
     # Check for undelivered consignments in the previous month

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
@@ -9,6 +8,7 @@ from rest_framework.decorators import api_view
 from utils.edd import calculate_expected_delivery
 from utils.bill_calculator import calculate_bill
 from utils.mis_report import generate_mis_report
+from utils.bulk_consignment import process_bulk_consignment_creation
 from django.http.response import FileResponse
 
 @api_view(["GET"])
@@ -203,57 +203,24 @@ def deleteConsignment(request, lr):
 
 
 @api_view(["POST"])
-def createConsignment(request):
-    '''
-    request body:
-    {
-        "lr": 123,
-        "lrDate": "2023-05-02",
-        "quantity": 1,
-        "weight": 12.09,
-        "status": 1,
-        "mode": 1,
-        "remarks": "This is a remark",
-        "deliveryDate": "2023-05-02",
-        "consigneeId": 1,
-        "consignerId": 2,
-        "coloaderId": 1
-    }
-    '''
-
+def createBulkConsignment(request):
     req_data = request.data
-    if not req_data:
-        return HttpResponse.BadRequest(message="Invalid request")
-    
-    try:
-        
-        # fetch consignee tat
-        try:
-            tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
-            if tat is None:
-                tat = 0
-        except Exception as e:
-            print("Error fetching consignee tat: \n", e)
-        
-        req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
-        
-        # Ensure weight and additionalCharges are in decimal format
-        try:
-            req_data['weight'] = Decimal(req_data.get('weight', 0))
-            req_data['additionalCharges'] = Decimal(req_data.get('additionalCharges', 0))
-        except (TypeError, ValueError) as e:
-            print("[ERROR] Invalid decimal values: ", e)
-            return HttpResponse.BadRequest(message="Invalid decimal values.")
-        
-        
-        serializer = ConsignmentSerializer(data=req_data)
-        if serializer.is_valid():
-            serializer.save()
-            return HttpResponse.Ok(data=serializer.data, message="Consignment created successfully")
-        return HttpResponse.BadRequest(message=serializer.errors)
-    except Exception as e:
-        print("[ERROR] failed to create consignment: ", e)
-        return HttpResponse.Failed(message="Failed to create consignment")
+
+    if not req_data or not isinstance(req_data, list):
+        return HttpResponse.BadRequest(message="Invalid request. Expected a list of consignments")
+
+    response = process_bulk_consignment_creation(req_data)
+
+    successful = response['successful']
+    failed = response['failed']
+
+    if successful or failed:
+        return HttpResponse.Ok(
+            data={"successful": successful, "failed": failed},
+            message="Bulk consignment creation complete"
+        )
+    else:
+        return HttpResponse.BadRequest(message="No consignments were processed")
 
 
 

@@ -11,7 +11,7 @@ urlpatterns = [
     # path("consignments/filter/", getFilteredConsignments),
     path("consignments/statuscount/", getStatusCount),
     path("consignments/", getFilteredConsignments),
-    path("consignment/create/", createConsignment),
+    path("consignment/create/", createBulkConsignment),
     path("consignment/<str:lr>/update/", updateConsignment),
     path("consignment/<str:lr>/", getConsignmentByLr),
     path("consignment/<str:lr>/delete/", deleteConsignment),

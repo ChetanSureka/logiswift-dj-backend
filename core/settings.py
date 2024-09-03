@@ -102,7 +102,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://www.logiswift.in",
     "https://webapp-1175801.pythonanywhere.com",
-    "http://localhost:4173"
+    "http://localhost:4173",
+    "https://logiswift-frontend-git-ashish-chetansurekas-projects.vercel.app",
+    "https://logiswift-frontend-j7lxt67y4-chetansurekas-projects.vercel.app",
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True

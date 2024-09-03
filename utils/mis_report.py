@@ -122,8 +122,8 @@ def generate_mis_report(current_date: datetime):
     undelivered_previous_reverse = filter_undelivered_consignments(previous_reverse)
 
     if undelivered_previous_forward.exists() or undelivered_previous_reverse.exists():
-        previous_month_forward_data = [get_details(consignment) for consignment in previous_forward]
-        previous_month_reverse_data = [get_details(consignment) for consignment in previous_reverse]
+        previous_month_forward_data = [get_details(consignment, sl) for sl, consignment in enumerate(previous_forward, start=1)]
+        previous_month_reverse_data = [get_details(consignment, sl) for sl, consignment in enumerate(previous_reverse, start=1)]
 
         previous_month_dfs = {
             'Forward': pd.DataFrame(previous_month_forward_data),

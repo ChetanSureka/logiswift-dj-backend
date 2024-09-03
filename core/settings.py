@@ -56,13 +56,9 @@ INSTALLED_APPS = [
 
     "crm.apps.CrmConfig",
     "corsheaders",
-    # "mis.apps.MisConfig",
-    # "tasks.apps.TasksConfig",
     "django_tables2",
-    # "accounts.apps.AccountsConfig",
-    # "admin_searchable_dropdown"
     'rangefilter',
-    # 'rest_framework',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

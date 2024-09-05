@@ -372,27 +372,36 @@ def getStatusCount(request):
 
 @api_view(["GET"])
 def getMis(request):
-    '''
-    Generates an excel MIS report
-    '''
+    """
+    Generates an Excel MIS report for a given date range or for the current month by default.
+    """
     today = datetime.now().date()
     
+    # Get fromDate and toDate from the request, default to current month's date range if not provided
     fromDate = request.GET.get('fromDate', None)
     toDate = request.GET.get('toDate', None)
     
     if fromDate is None and toDate is None:
+        # Default to the current month's date range
         fromDate = today.replace(day=1).strftime('%Y-%m-%d')
         toDate = today.strftime('%Y-%m-%d')
     
-    fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
-    toDate = datetime.strptime(toDate, "%Y-%m-%d")
+    # Convert fromDate and toDate to datetime objects
+    try:
+        fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
+        toDate = datetime.strptime(toDate, "%Y-%m-%d")
+    except ValueError:
+        return HttpResponse.BadRequest(message="Invalid date format. Please use YYYY-MM-DD.")
+    
+    # Ensure toDate is not earlier than fromDate
+    if toDate < fromDate:
+        return HttpResponse.BadRequest(message="End date must be on or after the start date.")
     
     try:
-        # report_file = generate_mis_report(fromDate, toDate)
-        report_file = generate_mis_report(today)
+        # Generate the MIS report for the specified date range
+        report_file = generate_mis_report(fromDate, toDate)
         response = FileResponse(open(report_file, 'rb'), as_attachment=True, filename=report_file)
-        
         return response
     except Exception as e:
-        print("Error generating mis report: ", e)
-        return HttpResponse.Failed(message="Error generating mis report")
+        print("Error generating MIS report: ", e)
+        return HttpResponse.Failed(message="Error generating MIS report")

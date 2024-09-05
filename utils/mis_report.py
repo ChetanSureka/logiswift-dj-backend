@@ -88,20 +88,19 @@ def generate_excel(dataframes: dict, filename: str):
                     worksheet.set_column(i, i, max(column_len, header_len) + 2)
 
 
-def generate_mis_report(current_date: datetime):
+def generate_mis_report(fromDate: datetime, toDate: datetime) -> str:
     """
-    Generates MIS report based on the current and previous month consignments.
+    Generates an MIS report based on the provided date range.
     """
     # Define date ranges
-    first_day_current_month = current_date.replace(day=1)
-    first_day_previous_month = get_previous_month_date(current_date)
+    first_day_current_month = fromDate.replace(day=1)
     last_day_previous_month = first_day_current_month - timedelta(days=1)
 
-    # Filter current month's consignments
-    current_forward = filter_consignments(first_day_current_month, current_date, 'forward')
-    current_reverse = filter_consignments(first_day_current_month, current_date, 'reverse')
+    # Filter consignments for the given date range
+    current_forward = filter_consignments(fromDate, toDate, 'forward')
+    current_reverse = filter_consignments(fromDate, toDate, 'reverse')
 
-    # Prepare data for current month
+    # Prepare data for the current date range
     current_month_forward_data = [get_details(consignment, sl) for sl, consignment in enumerate(current_forward, start=1)]
     current_month_reverse_data = [get_details(consignment, sl) for sl, consignment in enumerate(current_reverse, start=1)]
 
@@ -110,13 +109,13 @@ def generate_mis_report(current_date: datetime):
         'Reverse': pd.DataFrame(current_month_reverse_data),
     }
 
-    # Generate current month's Excel report
-    current_month_filename = f'MIS_{current_date.strftime("%d_%b_%Y")}.xlsx'
+    # Generate current date range's Excel report
+    current_month_filename = f'MIS_{toDate.strftime("%d_%b_%Y")}.xlsx'
     generate_excel(current_month_dfs, current_month_filename)
 
     # Check for undelivered consignments in the previous month
-    previous_forward = filter_consignments(first_day_previous_month, last_day_previous_month, 'forward')
-    previous_reverse = filter_consignments(first_day_previous_month, last_day_previous_month, 'reverse')
+    previous_forward = filter_consignments(first_day_current_month, last_day_previous_month, 'forward')
+    previous_reverse = filter_consignments(first_day_current_month, last_day_previous_month, 'reverse')
 
     undelivered_previous_forward = filter_undelivered_consignments(previous_forward)
     undelivered_previous_reverse = filter_undelivered_consignments(previous_reverse)
@@ -130,7 +129,7 @@ def generate_mis_report(current_date: datetime):
             'Reverse': pd.DataFrame(previous_month_reverse_data),
         }
 
-        previous_month_filename = f'MIS_{first_day_previous_month.strftime("%b_%Y")}.xlsx'
+        previous_month_filename = f'MIS_{first_day_current_month.strftime("%b_%Y")}.xlsx'
         generate_excel(previous_month_dfs, previous_month_filename)
 
         # Zip files together

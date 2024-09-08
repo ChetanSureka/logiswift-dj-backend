@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from django.utils import timezone
@@ -43,7 +44,7 @@ def getConsignments(request):
         return HttpResponse.Ok(data=response_data, message="Consignments fetched successfully")
     except Exception as e:
         print("Failed to fetch Consignments [ERROR]: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["GET"])
@@ -59,7 +60,7 @@ def getConsignmentByLr(request, lr):
         return HttpResponse.BadRequest(message="Consignment not found")
     except Exception as e:
         print("Failed to get Consignment [ERROR]: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["GET"])
@@ -181,7 +182,7 @@ def getFilteredConsignments(request):
     
     except Exception as e:
         print("[ERROR] Failed to filter consignments: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["DELETE"])
@@ -199,7 +200,62 @@ def deleteConsignment(request, lr):
     
     except Exception as e:
         print("[ERROR] Failed to delete consignment: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
+
+
+@api_view(["POST"])
+def createConsignment(request):
+    '''
+    request body:
+    {
+        "lr": 123,
+        "lrDate": "2023-05-02",
+        "quantity": 1,
+        "weight": 12.09,
+        "status": 1,
+        "mode": 1,
+        "remarks": "This is a remark",
+        "deliveryDate": "2023-05-02",
+        "consigneeId": 1,
+        "consignerId": 2,
+        "coloaderId": 1
+    }
+    '''
+
+    req_data = request.data
+    if not req_data:
+        return HttpResponse.BadRequest(message="Invalid request")
+    
+    try:
+        
+        # fetch consignee tat
+        try:
+            tat = ConsigneeConsigner.objects.get(id=req_data['consigner_id']).tat
+            if tat is None:
+                tat = 0
+        except Exception as e:
+            print("Error fetching consignee tat: \n", e)
+        
+        req_data["expectedDeliveryDate"] = calculate_expected_delivery(req_data['lrDate'], tat)
+        
+        # Ensure weight and additionalCharges are in decimal format
+        try:
+            req_data['weight'] = Decimal(req_data.get('weight', 0))
+            req_data['additionalCharges'] = Decimal(req_data.get('additionalCharges', 0))
+        except (TypeError, ValueError) as e:
+            print("[ERROR] Invalid decimal values: ", e)
+            return HttpResponse.BadRequest(message="Invalid decimal values.")
+        
+        
+        serializer = ConsignmentSerializer(data=req_data)
+        if serializer.is_valid():
+            serializer.save()
+            return HttpResponse.Ok(data=serializer.data, message="Consignment created successfully")
+        return HttpResponse.BadRequest(message=serializer.errors)
+    except Exception as e:
+        print("[ERROR] failed to create consignment: ", e)
+        return HttpResponse.Failed(message="Failed to create consignment", error=e)
+
 
 
 @api_view(["POST"])
@@ -334,32 +390,41 @@ def getStatusCount(request):
     
     except Exception as e:
         print("[ERROR] failed to get status count: ", e)
-        return HttpResponse.Failed({"error": "Failed to get status count"})
+        return HttpResponse.Failed("Failed to get status count", error=e)
 
 
 @api_view(["GET"])
 def getMis(request):
-    '''
-    Generates an excel MIS report
-    '''
+    """
+    Generates an Excel MIS report for a given date range or for the current month by default.
+    """
     today = datetime.now().date()
     
+    # Get fromDate and toDate from the request, default to current month's date range if not provided
     fromDate = request.GET.get('fromDate', None)
     toDate = request.GET.get('toDate', None)
     
     if fromDate is None and toDate is None:
+        # Default to the current month's date range
         fromDate = today.replace(day=1).strftime('%Y-%m-%d')
         toDate = today.strftime('%Y-%m-%d')
     
-    fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
-    toDate = datetime.strptime(toDate, "%Y-%m-%d")
+    # Convert fromDate and toDate to datetime objects
+    try:
+        fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
+        toDate = datetime.strptime(toDate, "%Y-%m-%d")
+    except ValueError:
+        return HttpResponse.BadRequest(message="Invalid date format. Please use YYYY-MM-DD.")
+    
+    # Ensure toDate is not earlier than fromDate
+    if toDate < fromDate:
+        return HttpResponse.BadRequest(message="End date must be on or after the start date.")
     
     try:
-        # report_file = generate_mis_report(fromDate, toDate)
-        report_file = generate_mis_report(today)
+        # Generate the MIS report for the specified date range
+        report_file = generate_mis_report(fromDate, toDate)
         response = FileResponse(open(report_file, 'rb'), as_attachment=True, filename=report_file)
-        
         return response
     except Exception as e:
-        print("Error generating mis report: ", e)
-        return HttpResponse.Failed(message="Error generating mis report")
+        print("Error generating MIS report: ", e)
+        return HttpResponse.Failed(message="Error generating MIS report")

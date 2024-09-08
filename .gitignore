@@ -165,3 +165,4 @@ utils/update_tat_queries.sql
 .vscode/launch.json
 *.xlsx
 *.pdf
+*.zip

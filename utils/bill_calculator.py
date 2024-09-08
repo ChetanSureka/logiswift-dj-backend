@@ -100,7 +100,7 @@ def calculate_bill(consignment: Consignment):
     
     
     bill_obj, created = Billings.objects.update_or_create(
-        lr=consignment,
+        consignment=consignment,
         tatstatus=consignment.tatstatus,
         variance=consignment.variance,
         

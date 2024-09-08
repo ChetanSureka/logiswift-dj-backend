@@ -94,7 +94,7 @@ def updateDistributors(request, id):
         return HttpResponse.BadRequest(message=serializer.errors)
     except Exception as e:
         print("[ERROR] Error updating distributor: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 
 
 @api_view(["DELETE"])

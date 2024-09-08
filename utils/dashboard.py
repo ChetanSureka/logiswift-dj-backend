@@ -46,7 +46,7 @@ def get_past_six_months_weight():
         month_end = next_month.replace(day=1) - timedelta(days=1)
         total_weight = get_current_month_total_weight(month_start, month_end)
         weights.append({
-            "month": month_start.strftime("%B"),
+            "month": month_start.strftime("%B")[:3],
             "weight": total_weight
         })
     

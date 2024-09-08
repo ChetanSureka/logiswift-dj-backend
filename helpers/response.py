@@ -1,5 +1,8 @@
 from typing import Any
 from rest_framework.response import Response
+import logging
+
+logger = logging.getLogger(__name__)
 
 class HttpResponse():
 
@@ -24,7 +27,13 @@ class HttpResponse():
     def Failed(
         message: str = "Internal Server Error",
         status: str = "failed",
-        statusCode: int = 500):
+        statusCode: int = 500,
+        error: any = None):
+        
+        try:
+            logger.error(error)
+        except:
+            pass
         
         return Response(
             status=statusCode,

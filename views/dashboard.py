@@ -10,5 +10,5 @@ def getDashboard(request):
         return HttpResponse.Ok(data=data, message="Dashboard fetched successfully")
     except Exception as e:
         print("[ERROR] Error fetching Dashboard: ", e)
-        return HttpResponse.Failed()
+        return HttpResponse.Failed(error=e)
 

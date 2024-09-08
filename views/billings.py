@@ -1,15 +1,14 @@
+from io import BytesIO
 from django.db.models import Q, F, Case, When, Value, IntegerField
 from crm.models import Consignment, Billings
 from helpers.response import HttpResponse
 from rest_framework.decorators import api_view
 from datetime import datetime, timedelta
 from utils.bill_calculator import calculate_bill
-from core.settings import BASE_DIR
 from utils.edd import calculate_expected_delivery
 from serializers.consignments import ConsignmentSerializer
 from serializers.billings import GetBillingsSerializer
 import pandas as pd
-import tempfile
 from django.http.response import FileResponse
 
 def update_consignment(consignment: Consignment):
@@ -113,19 +112,22 @@ def bulk_create_bills(request):
         else:
             return HttpResponse.Ok(message="No consignments are delivered for the current month.")
         
-        # Convert the DataFrame to an Excel file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
-            with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
-                df_forward = df[df["mode"].str.lower() == 'forward']
-                df_reverse = df[df["mode"].str.lower() == 'reverse']
-                
-                df_forward.to_excel(writer, index=False, sheet_name='Forward')
-                df_reverse.to_excel(writer, index=False, sheet_name='Reverse')
+        # Convert the DataFrame to an Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df_forward = df[df["mode"].str.lower() == 'forward']
+            df_reverse = df[df["mode"].str.lower() == 'reverse']
             
-            temp_file.seek(0)
-            response = FileResponse(open(temp_file.name, 'rb'), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, filename=f"bill_{fromDate.date()}-{toDate.date()}.xlsx")
-            response['Content-Disposition'] = f'attachment; filename=bill_{fromDate.date()}-{toDate.date()}.xlsx'
-        
+            df_forward.to_excel(writer, index=False, sheet_name='Forward')
+            df_reverse.to_excel(writer, index=False, sheet_name='Reverse')
+            
+        # Seek to the beginning of the stream
+        output.seek(0)
+
+        # Create a FileResponse
+        response = FileResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, filename=f"bill_{fromDate.date()}-{toDate.date()}.xlsx")
+        response['Content-Disposition'] = f'attachment; filename=bill_{fromDate.date()}-{toDate.date()}.xlsx'
+
         return response
     
     

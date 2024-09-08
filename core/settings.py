@@ -50,19 +50,15 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
-    "django.contrib.sessions",
+    # "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
     "crm.apps.CrmConfig",
     "corsheaders",
-    # "mis.apps.MisConfig",
-    # "tasks.apps.TasksConfig",
     "django_tables2",
-    # "accounts.apps.AccountsConfig",
-    # "admin_searchable_dropdown"
     'rangefilter',
-    # 'rest_framework',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -101,9 +97,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "https://www.logiswift.in",
-    "http://localhost:4173"
+    "https://webapp-1175801.pythonanywhere.com",
+    "http://localhost:4173",
+    "https://logiswift-frontend-git-ashish-chetansurekas-projects.vercel.app",
+    "https://logiswift-frontend-j7lxt67y4-chetansurekas-projects.vercel.app",
 ]
 
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_CREDENTIALS = True
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -170,7 +171,6 @@ if prod:
 else:
     WEBSITE_BASE_URL = 'http://127.0.0.1:8000/'
 
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -178,14 +178,14 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler"},
         "file": {
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "logs/general.log"),
+            "filename": "general.log",
             "formatter": "verbose",
         },
     },
     "loggers": {
         "": {
             "handlers": ["console", "file"],
-            "level": "INFO",
+            "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
         }
     },
     "formatters": {

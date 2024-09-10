@@ -73,9 +73,6 @@ def calculate_bill(consignment: Consignment):
 
     consignee = consignment.consignee_id
     consigner = consignment.consigner_id
-
-    # rate = 0 if consigner.rate is None else consigner.rate
-    # odaCharge = 0 if consigner.odaCharge is None else consigner.odaCharge
     
     if consignment.mode == 'forward':
         rate = 0 if consignment.consigner_id.rate is None else consignment.consigner_id.rate
@@ -101,33 +98,35 @@ def calculate_bill(consignment: Consignment):
     
     bill_obj, created = Billings.objects.update_or_create(
         consignment=consignment,
-        tatstatus=consignment.tatstatus,
-        variance=consignment.variance,
-        
-        consigneeId=consignee.id,
-        consigneeName=consignee.name,
-        
-        consignerId=consigner.id,
-        consignerName=consigner.name,
-        
-        chargeableWeight=chargable_weight,
-        amount=amount,
-        rate=rate,
-        odaCharge=odaCharge,
-        additionalCharge=additionalCharges,
-        totalAmount=total_amount,
-        
-        quantity=consignment.quantity,
-        
-        cp_chargeableWeight=chargable_weight,
-        cp_amount=amount,
-        cp_rate=rate,
-        cp_odaCharge=odaCharge,
-        cp_additionalCharge=additionalCharges,
-        cp_totalAmount=total_amount,
-        
-        created_by='system',
-        updated_by='system'
+        defaults={
+            "tatstatus": consignment.tatstatus,
+            "variance": consignment.variance,
+            
+            "consigneeId": consignee.id,
+            "consigneeName": consignee.name,
+            
+            "consignerId": consigner.id,
+            "consignerName": consigner.name,
+            
+            "chargeableWeight": chargable_weight,
+            "amount": amount,
+            "rate": rate,
+            "odaCharge": odaCharge,
+            "additionalCharge": additionalCharges,
+            "totalAmount": total_amount,
+            
+            "quantity": consignment.quantity,
+            
+            "cp_chargeableWeight": chargable_weight,
+            "cp_amount": amount,
+            "cp_rate": rate,
+            "cp_odaCharge": odaCharge,
+            "cp_additionalCharge": additionalCharges,
+            "cp_totalAmount": total_amount,
+            
+            "created_by": 'system',
+            "updated_by": 'system'
+        }
     )
     
     return bill_obj

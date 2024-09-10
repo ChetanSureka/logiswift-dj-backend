@@ -61,15 +61,15 @@ def bulk_create_bills(request):
         
         if fromDate is None or toDate is None:
             today = datetime.today()
-            fromDate = today.replace(day=1).strftime("%d-%m-%Y")
-            toDate = ((today.replace(day=1) + timedelta(days=32)).replace(day=1) + timedelta(days=-1)).strftime("%d-%m-%Y")
+            fromDate = today.replace(day=1).strftime("%Y-%m-%d")
+            toDate = ((today.replace(day=1) + timedelta(days=32)).replace(day=1) + timedelta(days=-1)).strftime("%Y-%m-%d")
         
-        fromDate = datetime.strptime(fromDate, "%d-%m-%Y")
-        toDate = datetime.strptime(toDate, "%d-%m-%Y")
+        fromDate = datetime.strptime(fromDate, "%Y-%m-%d")
+        toDate = datetime.strptime(toDate, "%Y-%m-%d")
         print("request dates: ", toDate, ", fromDate: ", fromDate)
     except Exception as e:
         print("[ERROR] Invalid dates for bulk create request")
-        return HttpResponse.BadRequest(message="Invalid date format. use dd-mm-yyyy")
+        return HttpResponse.BadRequest(message="Invalid date format. use yyyy-mm-dd")
     
     try:
         forward_consignments = Consignment.objects.filter(
@@ -246,7 +246,22 @@ def update_bill(request, id):
         
         if serializer.is_valid():
             serializer.save()
-            return HttpResponse.Ok(data=serializer.data, message="Bill updated successfully")
+            
+            # save the changes to qty and additionalcharge to the consignment table
+            quantity = serializer.validated_data.get('quantity', bill.quantity)
+            additionalCharge = serializer.validated_data.get('additionalCharge', bill.additionalCharge)
+            
+            consignment = bill.consignment
+            consignment.quantity = quantity
+            consignment.additionalCharges = additionalCharge
+            consignment.save()
+            
+            # recalculate the bill based on updated values
+            updated_bill = calculate_bill(consignment)
+            updated_serializer = GetBillingsSerializer(updated_bill)
+            res_data = updated_serializer.data
+            
+            return HttpResponse.Ok(data=res_data, message="Bill updated successfully")
         else:
             return HttpResponse.BadRequest(data=serializer.errors, message="Invalid data")
     

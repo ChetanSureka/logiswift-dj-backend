@@ -11,6 +11,9 @@ class ConsignmentSerializer(serializers.ModelSerializer):
 class GetBillingsSerializer(serializers.ModelSerializer):
     
     lr = serializers.CharField(source='consignment.lr')
+    lrDate = serializers.DateField(source='consignment.lrDate')
+    deliveryDate = serializers.DateField(source='consignment.deliveryDate')
+    mode = serializers.DateField(source='consignment.mode')
 
     class Meta:
         model = Billings
@@ -18,6 +21,9 @@ class GetBillingsSerializer(serializers.ModelSerializer):
             "id",
             "consignment",
             "lr",
+            "lrDate",
+            "deliveryDate",
+            "mode",
             "tatstatus",
             "variance",
             "consigneeId",

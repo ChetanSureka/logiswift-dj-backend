@@ -24,8 +24,8 @@ def get_current_month_total_weight(start_date, end_date):
 
 def get_current_month_total_consignments(start_date, end_date):
     return Consignment.objects.filter(
-        Q(lrDate__gte=start_date, lrDate__lte=end_date) |
-        Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
+        Q(lrDate__gte=start_date, lrDate__lte=end_date) 
+        # | Q(deliveryDate__gte=start_date, deliveryDate__lte=end_date)
     ).count()
     
 

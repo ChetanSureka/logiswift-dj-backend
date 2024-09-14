@@ -263,20 +263,19 @@ def createBulkConsignment(request):
     req_data = request.data
 
     if not req_data or not isinstance(req_data, list):
-        return HttpResponse.BadRequest(message="Invalid request. Expected a list of consignments")
+        return HttpResponse.BadRequest(
+            message="Invalid request. Expected a list of consignments"
+        )
 
+    # Process the consignment list
     response = process_bulk_consignment_creation(req_data)
 
-    successful = response['successful']
-    failed = response['failed']
+    # Return the response as per the desired format
+    return HttpResponse.Ok(
+        data=response,
+        message="Bulk consignment creation complete"
+    )
 
-    if successful or failed:
-        return HttpResponse.Ok(
-            data={"successful": successful, "failed": failed},
-            message="Bulk consignment creation complete"
-        )
-    else:
-        return HttpResponse.BadRequest(message="No consignments were processed")
 
 
 

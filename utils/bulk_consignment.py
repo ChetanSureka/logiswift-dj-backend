@@ -5,12 +5,17 @@ from django.core.exceptions import ObjectDoesNotExist
 from utils.edd import calculate_expected_delivery
 from serializers.consignments import ConsignmentSerializer
 
-
 def process_bulk_consignment_creation(consignment_list):
-    successful_creations = []
-    failed_creations = []
+    """
+    Processes a list of consignments for bulk creation.
+    Returns a list of consignments with status and errors (if any).
+    """
+    result = []
 
     for consignment_data in consignment_list:
+        lr_number = consignment_data.get('lr', 'N/A')
+        consignment_result = {"lr": lr_number, "status": None, "errors": None}
+
         try:
             # Fetch consignee TAT
             try:
@@ -19,10 +24,12 @@ def process_bulk_consignment_creation(consignment_list):
                     tat = 0
             except ObjectDoesNotExist:
                 tat = 0
-                print("Consigner ID not found. Defaulting TAT to 0.")
+                consignment_result["errors"] = "Consigner ID not found. Defaulting TAT to 0."
 
             # Calculate expected delivery date
-            consignment_data["expectedDeliveryDate"] = calculate_expected_delivery(consignment_data['lrDate'], tat)
+            consignment_data["expectedDeliveryDate"] = calculate_expected_delivery(
+                consignment_data['lrDate'], tat
+            )
 
             # Ensure weight and additionalCharges are in decimal format
             try:
@@ -35,15 +42,18 @@ def process_bulk_consignment_creation(consignment_list):
             serializer = ConsignmentSerializer(data=consignment_data)
             if serializer.is_valid():
                 serializer.save()
-                successful_creations.append(serializer.data)
+                consignment_result["status"] = "success"
             else:
-                failed_creations.append({"data": consignment_data, "errors": serializer.errors})
+                consignment_result["status"] = "failed"
+                consignment_result["errors"] = serializer.errors
+
         except (ValueError, IntegrityError) as e:
-            # Handle specific errors and log them
-            failed_creations.append({"data": consignment_data, "errors": str(e)})
+            consignment_result["status"] = "failed"
+            consignment_result["errors"] = str(e)
         except Exception as e:
-            # Handle any other unexpected errors
-            failed_creations.append({"data": consignment_data, "errors": "Failed to create consignment: " + str(e)})
+            consignment_result["status"] = "failed"
+            consignment_result["errors"] = "Failed to create consignment: " + str(e)
 
-    return {"successful": successful_creations, "failed": failed_creations}
+        result.append(consignment_result)
 
+    return result

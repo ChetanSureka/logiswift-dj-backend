@@ -73,6 +73,7 @@ def calculate_bill(consignment: Consignment):
 
     consignee = consignment.consignee_id
     consigner = consignment.consigner_id
+    cp = consignment.vendor_id
     
     if consignment.mode == 'forward':
         rate = 0 if consignment.consigner_id.rate is None else consignment.consigner_id.rate
@@ -94,6 +95,11 @@ def calculate_bill(consignment: Consignment):
         additionalCharges = 0
     total_amount = amount + additionalCharges + odaCharge
     
+    # cp info for bill
+    cp_rate = 0 if cp.rate is None else cp.rate
+    cp_odaCharge = 0 if cp.odaCharge is None else cp.odaCharge
+    cp_amount = (chargable_weight * cp_rate)
+    cp_total_amount = cp_amount + additionalCharges + cp_odaCharge
     
     
     bill_obj, created = Billings.objects.update_or_create(
@@ -118,11 +124,11 @@ def calculate_bill(consignment: Consignment):
             "quantity": consignment.quantity,
             
             "cp_chargeableWeight": chargable_weight,
-            "cp_amount": amount,
-            "cp_rate": rate,
-            "cp_odaCharge": odaCharge,
+            "cp_amount": cp_amount,
+            "cp_rate": cp_rate,
+            "cp_odaCharge": cp_odaCharge,
             "cp_additionalCharge": additionalCharges,
-            "cp_totalAmount": total_amount,
+            "cp_totalAmount": cp_total_amount,
             
             "created_by": 'system',
             "updated_by": 'system'

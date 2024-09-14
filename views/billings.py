@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from datetime import datetime, timedelta
 from utils.bill_calculator import calculate_bill
 from utils.edd import calculate_expected_delivery
+from utils.bill_stats import get_bill_stats
 from serializers.consignments import ConsignmentSerializer
 from serializers.billings import GetBillingsSerializer
 import pandas as pd
@@ -160,7 +161,7 @@ def get_filtered_bills(request):
     tatstatus = request.query_params.get('tatstatus')
     from_date = request.query_params.get('fromDate')
     to_date = request.query_params.get('toDate')
-    
+    mode = request.query_params.get('mode')
     
     queryset = Billings.objects.all()
     
@@ -193,8 +194,14 @@ def get_filtered_bills(request):
         if to_date:
             queryset = queryset.filter(consignment__lrDate__lte=to_date)
         
+        if mode:
+            queryset = queryset.filter(consignment__mode=mode)
+        
         queryset = queryset.order_by('-consignment__lrDate')
         total_results = len(queryset)
+        
+        stats = get_bill_stats(queryset)
+        
         
         if limit or offset:
             limit = int(limit)
@@ -208,6 +215,7 @@ def get_filtered_bills(request):
             "offset": offset,
             "results_count": len(data),
             "total_results": total_results,
+            "stats": stats,
             "results": data,
         }
         

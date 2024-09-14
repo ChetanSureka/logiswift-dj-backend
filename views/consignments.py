@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db.models import Q, F, Case, When, Value, IntegerField
@@ -423,6 +424,7 @@ def getMis(request):
         # Generate the MIS report for the specified date range
         report_file = generate_mis_report(fromDate, toDate)
         response = FileResponse(open(report_file, 'rb'), as_attachment=True, filename=report_file)
+        os.remove(report_file)
         return response
     except Exception as e:
         print("Error generating MIS report: ", e)

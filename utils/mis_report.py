@@ -52,10 +52,12 @@ def get_previous_month_date(current_date: datetime) -> datetime:
 
 def filter_consignments(date_from: datetime, date_to: datetime, mode: str) -> list:
     """
-    Filters consignments based on date range and mode.
+    Filters consignments based on date range, mode, and also includes consignments
+    based on the delivery date or LR date.
     """
     return Consignment.objects.filter(
-        Q(lrDate__gte=date_from, lrDate__lte=date_to),
+        Q(lrDate__gte=date_from, lrDate__lte=date_to) | 
+        Q(deliveryDate__gte=date_from, deliveryDate__lte=date_to),
         mode=mode
     ).order_by('lrDate')
 

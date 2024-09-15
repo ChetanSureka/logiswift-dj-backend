@@ -274,7 +274,8 @@ def createBulkConsignment(request):
     # Return the response as per the desired format
     return HttpResponse.Ok(
         data=response,
-        message="Bulk consignment creation complete"
+        message="Bulk consignment creation complete",
+        statusCode=207
     )
 
 

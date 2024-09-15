@@ -14,7 +14,12 @@ def process_bulk_consignment_creation(consignment_list):
 
     for consignment_data in consignment_list:
         lr_number = consignment_data.get('lr', 'N/A')
-        consignment_result = {"lr": lr_number, "status": None, "errors": None}
+        consignment_result = {
+            "lr": lr_number,
+            "status": None,
+            "status_code": None,
+            "errors": None
+        }
 
         try:
             # Fetch consignee TAT
@@ -43,15 +48,19 @@ def process_bulk_consignment_creation(consignment_list):
             if serializer.is_valid():
                 serializer.save()
                 consignment_result["status"] = "success"
+                consignment_result["status_code"] = "200"
             else:
                 consignment_result["status"] = "failed"
+                consignment_result["status_code"] = "400"
                 consignment_result["errors"] = serializer.errors
 
         except (ValueError, IntegrityError) as e:
             consignment_result["status"] = "failed"
+            consignment_result["status_code"] = "400"
             consignment_result["errors"] = str(e)
         except Exception as e:
             consignment_result["status"] = "failed"
+            consignment_result["status_code"] = "500"
             consignment_result["errors"] = "Failed to create consignment: " + str(e)
 
         result.append(consignment_result)

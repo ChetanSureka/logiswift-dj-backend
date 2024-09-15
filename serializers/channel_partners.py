@@ -18,6 +18,6 @@ class ChannelPartnerSerializer(serializers.ModelSerializer):
             "pin",
             
             "odaCharge",
-            "fixedCharge",
-            "miscCharge",
+            "rate",
+            "additionalCharges",
         ]

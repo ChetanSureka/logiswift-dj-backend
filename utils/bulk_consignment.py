@@ -48,7 +48,7 @@ def process_bulk_consignment_creation(consignment_list):
             if serializer.is_valid():
                 serializer.save()
                 consignment_result["status"] = "success"
-                consignment_result["status_code"] = "200"
+                consignment_result["status_code"] = "201"
             else:
                 consignment_result["status"] = "failed"
                 consignment_result["status_code"] = "400"

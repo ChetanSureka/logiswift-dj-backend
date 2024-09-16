@@ -36,12 +36,12 @@ def process_bulk_consignment_creation(consignment_list):
                 consignment_data['lrDate'], tat
             )
 
-            # Ensure weight and additionalCharges are in decimal format
-            try:
-                consignment_data['weight'] = Decimal(consignment_data.get('weight', 0))
-                consignment_data['additionalCharges'] = Decimal(consignment_data.get('additionalCharges', 0))
-            except (TypeError, ValueError) as e:
-                raise ValueError("Invalid decimal values: " + str(e))
+            # # Ensure weight and additionalCharges are in decimal format
+            # try:
+            #     consignment_data['weight'] = Decimal(consignment_data.get('weight', 0))
+            #     consignment_data['additionalCharges'] = Decimal(consignment_data.get('additionalCharges', 0))
+            # except (TypeError, ValueError) as e:
+            #     raise ValueError("Invalid decimal values: " + str(e))
 
             # Serialize and save the consignment
             serializer = ConsignmentSerializer(data=consignment_data)

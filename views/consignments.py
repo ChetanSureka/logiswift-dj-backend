@@ -271,7 +271,7 @@ def createBulkConsignment(request):
     # Process the consignment list
     response_data = process_bulk_consignment_creation(req_data)
     
-    success_data = [item for item in response_data if item["status_code"] == 200]
+    success_data = [item for item in response_data if item["status_code"] == 201]
     bad_request_data = [item for item in response_data if item["status_code"] == 400]
     server_error_data = [item for item in response_data if item["status_code"] == 500]
 

@@ -48,19 +48,19 @@ def process_bulk_consignment_creation(consignment_list):
             if serializer.is_valid():
                 serializer.save()
                 consignment_result["status"] = "success"
-                consignment_result["status_code"] = "201"
+                consignment_result["status_code"] = 201
             else:
                 consignment_result["status"] = "failed"
-                consignment_result["status_code"] = "400"
+                consignment_result["status_code"] = 400
                 consignment_result["errors"] = serializer.errors
 
         except (ValueError, IntegrityError) as e:
             consignment_result["status"] = "failed"
-            consignment_result["status_code"] = "400"
+            consignment_result["status_code"] = 400
             consignment_result["errors"] = str(e)
         except Exception as e:
             consignment_result["status"] = "failed"
-            consignment_result["status_code"] = "500"
+            consignment_result["status_code"] = 500
             consignment_result["errors"] = "Failed to create consignment: " + str(e)
 
         result.append(consignment_result)

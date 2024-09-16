@@ -270,34 +270,40 @@ def createBulkConsignment(request):
 
     # Process the consignment list
     response_data = process_bulk_consignment_creation(req_data)
-    
-    success_data = [item for item in response_data if item["status_code"] == 201]
-    bad_request_data = [item for item in response_data if item["status_code"] == 400]
-    server_error_data = [item for item in response_data if item["status_code"] == 500]
+    total_count = len(response_data)
+    success_count = 0
+    failure_count = 0
 
-    if success_data and not bad_request_data and not server_error_data:
-        # All successful consignments
+    # Single pass over response data
+    for item in response_data:
+        if item["status_code"] == 201:
+            success_count += 1
+        elif item["status_code"] in (400, 500):
+            failure_count += 1
+
+    # Check the results
+    if success_count == total_count:
+        # All consignments were successfully created
         return HttpResponse.Ok(
             data=response_data,
             message="All consignments were successfully created.",
             statusCode=200
         )
-    elif not success_data and (bad_request_data or server_error_data):
-        # All failed consignments
-        return HttpResponse.BadRequest(
+    elif failure_count == total_count:
+        # All consignments failed
+        return HttpResponse.Ok(
             data=response_data,
             message="Failed to create all consignments.",
             statusCode=400
         )
     else:
-        # Some consignments succeeded and others failed
+        # Partial success
         return HttpResponse.Ok(
             data=response_data,
             message="Bulk consignment creation partially complete with some errors.",
             statusCode=207,
             status="multi-status"
         )
-
 
 
 

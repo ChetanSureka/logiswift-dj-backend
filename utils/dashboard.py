@@ -52,6 +52,91 @@ def get_past_six_months_weight():
     
     return weights[::-1]
 
+def generate_month_stats(fromDate=None, toDate=None, stats={}):
+    if fromDate is not None and toDate is not None:
+        stats["month"] = [
+            {
+                "title": "total-weight",
+                "value": get_current_month_total_weight(fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": False,
+                "url": None
+            },
+            {
+                "title": "in-transit",
+                "value": get_current_month_counts('in-transit', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=in-transit&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"status=in-transit&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "delivered",
+                "value": get_current_month_counts('delivered', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=delivered&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"status=delivered&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "out-for-delivery",
+                "value": get_current_month_counts('out-for-delivery', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&status=out-for-delivery&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"status=out-for-delivery&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "tat-passed",
+                "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"tatStatus=passed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "tat-failed",
+                "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"tatStatus=failed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "lr-delayed",
+                "value": get_current_month_counts('delayed', fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": True,
+                "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
+                "query_param": f"delayed=true&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}"
+            },
+            {
+                "title": "total-consignments",
+                "value": get_current_month_total_consignments(fromDate, toDate),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": False,
+                "url": None
+            },
+            {
+                "title": "forward",
+                "value": get_count({'mode': 'forward', 'lrDate__gte': fromDate, 'lrDate__lte': toDate}),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": False,
+                "url": None                
+            },
+            {
+                "title": "reverse",
+                "value": get_count({'mode': 'reverse', 'lrDate__gte': fromDate, 'lrDate__lte': toDate}),
+                "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
+                "isclickable": False,
+                "url": None                
+            },
+        ]
+        
+        return stats
+    
+    
+
 def generate_dashboard(from_date=None, to_date=None):
     if from_date and to_date:
         start_date = date.fromisoformat(from_date)
@@ -141,174 +226,11 @@ def generate_dashboard(from_date=None, to_date=None):
                 "url": None                
             },
         ],
-        
-        "month": [
-            {
-                "title": "total-weight",
-                "value": get_current_month_total_weight(start_date, end_date),
-                "time": "current month",
-                "isclickable": False,
-                "url": None
-            },
-            {
-                "title": "in-transit",
-                "value": get_current_month_counts('in-transit', start_date, end_date),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "delivered",
-                "value": get_current_month_counts('delivered', start_date, end_date),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "out-for-delivery",
-                "value": get_current_month_counts('out-for-delivery', start_date, end_date),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "tat-passed",
-                "value": get_count({'tatstatus': 'passed', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "tat-failed",
-                "value": get_count({'tatstatus': 'failed', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            # {
-            #     "title": "TAT Going to Fail",
-            #     "value": get_count({'expectedDeliveryDate': current_date, 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
-            #     "time": "current month",
-            #     "isclickable": False,
-            #     "url": None
-            # },
-            {
-                "title": "lr-delayed",
-                "value": get_count({'delayed': True, 'lrDate__gte': start_date, 'lrDate__lt': end_date}),
-                "time": "current month",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "total-consignments",
-                "value": get_current_month_total_consignments(start_date, end_date),
-                "time": "current month",
-                "isclickable": False,
-                "url": None
-            },
-            {
-                "title": "forward",
-                "value": get_count({'mode': 'forward', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": "current month",
-                "isclickable": False,
-                "url": None                
-            },
-            {
-                "title": "reverse",
-                "value": get_count({'mode': 'reverse', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": "current month",
-                "isclickable": False,
-                "url": None                
-            },
-        ],
         "graph": {
             "weight": get_past_six_months_weight()
         }
     }
+    
+    stats = generate_month_stats(start_date, end_date, stats)
 
-    if from_date is not None and to_date is not None:
-        stats["custom_month"] = [
-            {
-                "title": "total-weight",
-                "value": get_current_month_total_weight(start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": False,
-                "url": None
-            },
-            {
-                "title": "in-transit",
-                "value": get_current_month_counts('in-transit', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=in-transit&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "delivered",
-                "value": get_current_month_counts('delivered', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=delivered&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "out-for-delivery",
-                "value": get_current_month_counts('out-for-delivery', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"status=out-for-delivery&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "tat-passed",
-                "value": get_current_month_counts('tatstatus', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"tatStatus=passed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "tat-failed",
-                "value": get_current_month_counts('tatstatus', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"tatStatus=failed&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "lr-delayed",
-                "value": get_current_month_counts('delayed', start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": True,
-                "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}",
-                "query_param": f"delayed=true&fromDate={start_date.strftime('%Y-%m-%d')}&toDate={end_date.strftime('%Y-%m-%d')}"
-            },
-            {
-                "title": "total-consignments",
-                "value": get_current_month_total_consignments(start_date, end_date),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": False,
-                "url": None
-            },
-            {
-                "title": "forward",
-                "value": get_count({'mode': 'forward', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": False,
-                "url": None                
-            },
-            {
-                "title": "reverse",
-                "value": get_count({'mode': 'reverse', 'lrDate__gte': start_date, 'lrDate__lte': end_date}),
-                "time": f"from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}",
-                "isclickable": False,
-                "url": None                
-            },
-        ]
     return stats

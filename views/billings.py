@@ -147,6 +147,45 @@ def bulk_create_bills(request):
         print("Error creating bulk bills: ", e)
         return HttpResponse.BadRequest(message="Error creating bills")
 
+
+def filter_bills(queryset, filters: dict):
+    tatstatus = filters.get('tatstatus')
+    search = filters.get('search')
+    from_date = filters.get('from_date')
+    to_date = filters.get('to_date')
+    mode = filters.get('mode')
+    
+    if tatstatus:
+        queryset = queryset.filter(tatstatus=tatstatus)
+    
+    if search:
+        queryset = queryset.filter(
+            Q(consignment__lr__iexact=search) | 
+            Q(consignment__lr__startswith=search) | 
+            Q(consignment__lr__icontains=search)
+        ).annotate(
+            search_order=Case(
+                When(consignment__lr__iexact=search, then=Value(0)),
+                When(consignment__lr__startswith=search, then=Value(1)),
+                When(consignment__lr__icontains=search, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        ).order_by('search_order', 'consignment__lr')
+    
+    if from_date:
+        queryset = queryset.filter(consignment__lrDate__gte=from_date)
+    
+    if to_date:
+        queryset = queryset.filter(consignment__lrDate__lte=to_date)
+    
+    if mode:
+        queryset = queryset.filter(consignment__mode=mode)
+    
+    queryset = queryset.order_by('-consignment__lrDate')
+    
+    return queryset
+
 @api_view(["GET"])
 def get_filtered_bills(request):
     '''
@@ -157,51 +196,20 @@ def get_filtered_bills(request):
     '''
     limit = request.query_params.get('limit')
     offset = request.query_params.get('offset')
-    search = request.query_params.get('search')
-    tatstatus = request.query_params.get('tatstatus')
-    from_date = request.query_params.get('fromDate')
-    to_date = request.query_params.get('toDate')
-    mode = request.query_params.get('mode')
     
     queryset = Billings.objects.all()
+    filters = {
+        'tatstatus': request.query_params.get('tatstatus'),
+        'search': request.query_params.get('search'),
+        'from_date': request.query_params.get('fromDate'),
+        'to_date': request.query_params.get('toDate'),
+        'mode': request.query_params.get('mode'),
+    }
     
     try:
-        if tatstatus:
-            queryset = queryset.filter(tatstatus=tatstatus)
+        queryset = filter_bills(queryset, filters)
         
-        if search:
-            queryset = queryset.filter(
-                Q(consignment__lr__iexact=search) | 
-                Q(consignment__lr__startswith=search) | 
-                Q(consignment__lr__icontains=search)
-            ).annotate(
-                search_order=Case(
-                    When(consignment__lr__iexact=search, then=Value(0)),
-                    When(consignment__lr__startswith=search, then=Value(1)),
-                    When(consignment__lr__icontains=search, then=Value(2)),
-                    default=Value(3),
-                    output_field=IntegerField(),
-                )
-            ).order_by('search_order', 'consignment__lr')
-            # queryset = queryset.filter(
-            #     Q(lr__icontains=search)
-            # ).order_by('lr__lr')
-
-        
-        if from_date:
-            queryset = queryset.filter(consignment__lrDate__gte=from_date)
-        
-        if to_date:
-            queryset = queryset.filter(consignment__lrDate__lte=to_date)
-        
-        if mode:
-            queryset = queryset.filter(consignment__mode=mode)
-        
-        queryset = queryset.order_by('-consignment__lrDate')
         total_results = len(queryset)
-        
-        stats = get_bill_stats(queryset)
-        
         
         if limit or offset:
             limit = int(limit)
@@ -215,7 +223,6 @@ def get_filtered_bills(request):
             "offset": offset,
             "results_count": len(data),
             "total_results": total_results,
-            "stats": stats,
             "results": data,
         }
         
@@ -292,3 +299,26 @@ def get_bill_by_id(request, id):
     except Exception as e:
         print("[ERROR] Failed to retrieve Bill: ", e)
         return HttpResponse.Failed(message="Failed to retrieve Bill")
+    
+
+
+@api_view(["GET"])
+def getBillStats(request):
+    queryset = Billings.objects.all()
+    filters = {
+        'tatstatus': request.query_params.get('tatstatus'),
+        'search': request.query_params.get('search'),
+        'from_date': request.query_params.get('fromDate'),
+        'to_date': request.query_params.get('toDate'),
+        'mode': request.query_params.get('mode'),
+    }
+    
+    try:
+        queryset = filter_bills(queryset, filters)
+        stats = get_bill_stats(queryset)
+        
+        return HttpResponse.Ok(data=stats, message="Successfully fetched bill stats")
+        
+    except Exception as e:
+        print("[ERROR] Failed to get bill stats")
+        return HttpResponse.Failed(message="Failed to get bill stats")

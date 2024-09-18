@@ -14,7 +14,9 @@ def process_bulk_consignment_creation(consignment_list):
 
     for consignment_data in consignment_list:
         lr_number = consignment_data.get('lr', 'N/A')
+        client_id = consignment_data.get('client_id', 'N/A')
         consignment_result = {
+            "client_id": client_id,
             "lr": lr_number,
             "status": None,
             "status_code": None,

@@ -88,7 +88,12 @@ def generate_month_stats(fromDate=None, toDate=None, stats={}):
             },
             {
                 "title": "tat-passed",
-                "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                # "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                "value": get_count({
+                    'tatstatus': 'passed',
+                    'lrDate__gte': fromDate,
+                    'lrDate__lte': toDate
+                }),
                 "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&tatStatus=passed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
@@ -96,7 +101,12 @@ def generate_month_stats(fromDate=None, toDate=None, stats={}):
             },
             {
                 "title": "tat-failed",
-                "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                # "value": get_current_month_counts('tatstatus', fromDate, toDate),
+                "value": get_count({
+                    'tatstatus': 'failed',
+                    'lrDate__gte': fromDate,
+                    'lrDate__lte': toDate
+                }),
                 "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&tatStatus=failed&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",
@@ -105,6 +115,11 @@ def generate_month_stats(fromDate=None, toDate=None, stats={}):
             {
                 "title": "lr-delayed",
                 "value": get_current_month_counts('delayed', fromDate, toDate),
+                # "value": get_count({
+                #     'delayed': True,
+                #     'lrDate__gte': fromDate,
+                #     'lrDate__lte': toDate
+                # }),
                 "time": f"{fromDate.strftime('%b %Y')} - {toDate.strftime('%b %Y')}",
                 "isclickable": True,
                 "url": f"consignments?limit=15&offset=0&delayed=true&fromDate={fromDate.strftime('%Y-%m-%d')}&toDate={toDate.strftime('%Y-%m-%d')}",

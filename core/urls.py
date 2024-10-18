@@ -9,5 +9,6 @@ urlpatterns = [
     # path("test/", include("mis.urls")),
     # path("tasks/", include("tasks.urls")),
     path("admin/", admin.site.urls, name="admin"),
+    path("utils/", include("crm.urls")),
     re_path("", index),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

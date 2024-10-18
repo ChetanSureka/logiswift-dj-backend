@@ -2,6 +2,7 @@ from django.urls import path
 from views.consignments import *
 from views.coloaders import *
 from views.dashboard import getDashboard
+from views.utils import tatUpdate
 from urls.distributors import urlpatterns as distributor_urlpatterns
 from urls.billings import urlpatterns as billing_urlpatterns
 from urls.channel_partners import urlpatterns as channel_partner_urlpatterns
@@ -22,6 +23,8 @@ urlpatterns = [
     path("consignments/generate/mis/", getMis),
     
     path("dashboard/", getDashboard),
+    
+    path("tatupdate/", tatUpdate),
 ]
 
 urlpatterns += distributor_urlpatterns

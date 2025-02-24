@@ -18,35 +18,6 @@ ConsignmentModeChoices = [
     ["reverse", "reverse"]
 ]
 
-
-# class Vendor(models.Model):
-#     '''
-#     Logistic vendors
-#     '''
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     name = models.CharField(max_length=100)
-#     address = models.CharField(max_length=200)
-#     email = models.EmailField(max_length=254)
-#     phone = models.CharField(default=0, max_length=10)
-#     pin = models.IntegerField(default=0)
-#     createdDate = models.DateField(auto_now_add=True)
-#     createdBy = models.IntegerField()
-#     modifiedDate = models.DateField(auto_now=True)
-#     modifiededBy = models.IntegerField()
-#     deletedOn = models.DateField(auto_now=True)
-#     last_login = models.DateField(auto_now=True)
-
-#     def __str__(self):
-#         return f"{self.name} - {self.phone}"
-
-#     # class Meta:
-#     #     verbose_name = "User"
-#     #     verbose_name_plural = "Users"
-
-#     class Meta:
-#         verbose_name = "Vendor"
-#         verbose_name_plural = "Vendors"
-
 class Location(models.Model):
     id = models.AutoField(primary_key=True)
     location = models.CharField(max_length=100)
@@ -108,34 +79,9 @@ class VendorDetails(models.Model):
         self.deletedOn = datetime.now()
         return self.save()
 
-    # class Meta:
-    #     verbose_name = "Vendor"
-    #     verbose_name_plural = "Vendors"
-
     class Meta:
         verbose_name = "Partner"
         verbose_name_plural = "Partner"
-
-
-# class VendorLocation(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     vendor = models.ForeignKey(VendorDetails, on_delete=models.CASCADE)
-#     location = models.ForeignKey(
-#         "Location", on_delete=models.CASCADE, related_name="vendorLocation")
-
-#     createdDate = models.DateField(auto_now_add=True)
-#     createdBy = models.CharField(
-#         max_length=100, null=True, blank=True, default="System")
-#     modifiedDate = models.DateField(auto_now=True)
-#     modifiedBy = models.CharField(
-#         max_length=100, null=True, blank=True, default="System")
-
-#     def __str__(self):
-#         return f"{self.vendor} - {self.location}"
-
-#     class Meta:
-#         verbose_name = "Location Mapping"
-#         verbose_name_plural = "Location Mapping"
 
 
 class Users(models.Model):
@@ -158,62 +104,15 @@ class Users(models.Model):
     def __str__(self):
         return f"{self.name} - {self.pincode}"
 
-    # class Meta:
-    #     verbose_name = "Account"
-    #     verbose_name_plural = "Accounts"
-
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
 
-
-'''
-Create a Sub-Location mapping Model
-'''
-
-
-# class Location(models.Model):
-#     id = models.AutoField(primary_key=True)
-#     location = models.CharField(max_length=100)
-#     sublocation = models.CharField(max_length=100, blank=True, null=True)
-#     # pincode = models.CharField(max_length=7)
-#     state = models.CharField(max_length=100, blank=True, null=True)
-#     rate = models.IntegerField(default=0, blank=True, null=True)
-#     location_type = models.CharField(max_length=100, verbose_name="Location Type",
-#                                      choices=[
-#                                          ("ODA", "ODA"),
-#                                          ("Normal", "Normal")
-#                                      ], default="Normal")
-#     enabled = models.BooleanField(default=True)
-#     # tat = models.IntegerField(blank=True, null=True, default=None)
-#     createdDate = models.DateField(auto_now_add=True)
-#     createdBy = models.CharField(max_length=100, null=True, blank=True)
-#     modifiedDate = models.DateField(auto_now=True, null=True, blank=True)
-#     modifiedBy = models.CharField(max_length=100, null=True, blank=True)
-
-#     def __str__(self):
-#         if self.sublocation:
-#             return f"{self.sublocation} - {self.location}"
-#         return f"{self.location}"
-
-#     class Meta:
-#         verbose_name = "Location"
-#         verbose_name_plural = "Locations"
-
-
 class ConsigneeConsigner(models.Model):
-    # If location mapping id exisis
-    # then used that id as location and destination as sublocation
-    # else destination as location
-    # Location_type -> if sub_loacation then ODA else normal
-
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, verbose_name="Name")
     address = models.CharField(max_length=200, verbose_name="Address")
     destination = models.CharField(max_length=100, verbose_name="Destination")
-    # locationMappingId = models.ForeignKey(
-    #     Location, on_delete=models.CASCADE, related_name="locationMappingId", null=True, blank=True, verbose_name="Location")
-    # locationMappingId = models.ManyToManyField(Location, related_name="locationMappingId", blank=True, verbose_name="Location")
     state = models.CharField(
         max_length=50, verbose_name="State", null=True, blank=True)
     email = models.EmailField(
@@ -268,7 +167,6 @@ class Consignment(models.Model):
     id = models.AutoField(primary_key=True)
     lr = models.CharField(unique=True, verbose_name="LR No.",
                           max_length=100, blank=True, null=True)
-    # consignmentDate = models.DateField(verbose_name="LR Date", null=True, blank=True, default=None)
     consignee_id = models.ForeignKey(
         ConsigneeConsigner, on_delete=models.CASCADE, related_name="consignee_id", verbose_name="Sender")
     consigner_id = models.ForeignKey(
@@ -276,7 +174,6 @@ class Consignment(models.Model):
     quantity = models.IntegerField(default=0, verbose_name="Quantity")
     weight = models.DecimalField(
         default=0, max_digits=7, decimal_places=2, verbose_name="Weight in kgs")
-    # weight = models.IntegerField(default=0, verbose_name="Weight in kgs")
     vendor_id = models.ForeignKey(VendorDetails, on_delete=models.CASCADE,
                                   related_name="vendor_id", verbose_name="Channel Partner", null=True, blank=True)
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE,
@@ -299,7 +196,6 @@ class Consignment(models.Model):
         ["failed", "failed"]], default=None)
     variance = models.IntegerField(null=True, blank=True, default=None)
 
-    # additional attributes
     delayed = models.BooleanField(default=False)
     delayedReason = models.TextField(blank=True, null=True, default=None)
     notified = models.BooleanField(default=False)
@@ -309,13 +205,6 @@ class Consignment(models.Model):
     additionalChargesReason = models.TextField(
         null=True, blank=True, default=None)
 
-    # location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, related_name="consignment_location", verbose_name="Location", default=None, null=True, blank=True)
-
-    # distributor_ids = models.CharField(max_length=200, default=None, null=True, blank=True)
-    # cp_id = models.CharField(max_length=100, default=None, null=True, blank=True)
-    # location_name = models.CharField(max_length=100, default=None, null=True, blank=True)
-
-    # createdDate = models.DateField(auto_now_add=False, verbose_name="LR Date")
     lrDate = models.DateField(auto_now_add=False, verbose_name="LR Date")
     createdBy = models.CharField(max_length=100, verbose_name="Created By")
     deliveryDate = models.DateField(
